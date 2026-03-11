@@ -187,10 +187,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             menuLoader.style.display = 'none';
 
             // REMOVE O LOADER OVERALL (REI NEO Fix)
-            const mainLoader = document.getElementById('loader');
+            const mainLoader = document.getElementById('loader') || document.querySelector('.loader-overlay');
             if (mainLoader) {
-                mainLoader.classList.remove('active');
-                setTimeout(() => mainLoader.style.display = 'none', 500);
+                mainLoader.classList.add('inactive'); // Usando a classe nova do CSS
+                document.body.classList.remove('loader-active');
+                setTimeout(() => mainLoader.style.display = 'none', 600);
             }
 
             // Liga as animações e o scroll da Navbar!
