@@ -96,7 +96,13 @@ body {
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--border-color);
-    transition: var(--transition-smooth);
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.4s;
+}
+
+.navbar.navbar-hidden {
+    transform: translateY(-120%);
+    opacity: 0;
+    pointer-events: none;
 }
 
 .nav-container {
@@ -491,8 +497,9 @@ body {
     justify-content: center;
     gap: 1rem;
     padding: 1rem 2rem;
-    position: relative;
-    /* não fixo mais na tela */
+    padding: 1rem 2rem;
+    position: sticky;
+    top: 5px; /* grudado ao teto via sticky */
     z-index: 900;
     background: rgba(10, 14, 23, 0.85);
     backdrop-filter: blur(12px);
@@ -1513,7 +1520,7 @@ body:has(#closed-banner) .hero {
 }
 
 body:has(#closed-banner) .category-nav {
-    top: 138px;
+    top: 62px; /* 58px do banner de fechar + margem visual */
 }
 
 /* Sempre esconde os links de texto quando o banner de fechado existe */
