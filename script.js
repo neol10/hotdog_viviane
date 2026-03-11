@@ -79,12 +79,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!dynamicContainer || !menuLoader || !supabase) return;
 
         try {
-            // Mostrar skeleton em vez de sumir com o container (Skeletons já estão no HTML e visíveis por padrão)
-            const { data: categories, error: catError } = await supabase.from('categories').select('*').order('order_index');
-            const { data: products, error: prodError } = await supabase.from('products').select('*').eq('is_active', true).order('name');
-            const { data: settingsData, error: setError } = await supabase.from('settings').select('*').eq('id', 1).single();
+            // TIMEOUT PARA BANCO DE DADOS (REI NEO V5 ANTI-TRAVAMENTO)
+            const timeout = (ms) => new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), ms));
+            
+            // Corrida entre o banco e o cronômetro de 6 segundos
+            const [categoriesResp, productsResp, settingsResp] = await Promise.race([
+                Promise.all([
+                    supabase.from('categories').select('*').order('order_index'),
+                    supabase.from('products').select('*').eq('is_active', true).order('name'),
+                    supabase.from('settings').select('*').eq('id', 1).single()
+                ]),
+                timeout(6000)
+            ]);
 
-            if (catError || prodError) throw new Error("Database falhou");
+            const categories = categoriesResp.data;
+            const products = productsResp.data;
+            const settingsData = settingsResp.data;
+
+            if (categoriesResp.error || productsResp.error) throw new Error("Database falhou");
 
             dynamicContainer.innerHTML = '';
             // Salva array no window para leitura do modal
