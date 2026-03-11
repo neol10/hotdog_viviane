@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const diaNum = agora.getDay();
             const daysOrder = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
             const todayKey = daysOrder[diaNum];
-            const todayConfig = settings.schedule[todayKey] || { isOpen: true, start: "19:00", end: "23:00" };
+            const todayConfig = settings.schedule[todayKey] || { isOpen: true, start: "18:00", end: "23:00" };
 
             function timeToMinutes(t) {
                 if (!t) return 0;
@@ -795,11 +795,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Auto-preenchimento (Login automático) ao completar 11 dígitos
             if (val.length === 11 && supabase) {
                 try {
+                    const formattedPhone = e.target.value.trim();
                     console.log("🔍 Buscando perfil para:", val);
-const { data: customer, error: rpcErr } = await supabase.rpc('get_customer_by_phone', { phone_query: val });
-if (rpcErr) console.error("❌ Erro RPC Perfil:", rpcErr);
-console.log("✅ Resultado Perfil:", customer);
-const profileRec = (customer && customer.length > 0) ? customer[0] : null;
+                    const { data: customer, error: rpcErr } = await supabase.rpc('get_customer_by_phone', { phone_query: val });
+                    if (rpcErr) console.error("❌ Erro RPC Perfil:", rpcErr);
+                    console.log("✅ Resultado Perfil:", customer);
+                    const profileRec = (customer && customer.length > 0) ? customer[0] : null;
 
                     if (profileRec) {
                         if (profileRec.full_name) inputName.value = profileRec.full_name;
