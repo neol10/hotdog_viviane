@@ -47,7 +47,7 @@
                 <i class="ph-fill ph-shield-check" style="font-size: 3rem; color: var(--primary-red);"></i>
                 <h2 style="margin-top: 10px; color: white;">Acesso Restrito</h2>
             </div>
-            <input type="text" id="login-user" class="profile-input" placeholder="Usuário Admin"
+            <input type="text" id="login-user" class="profile-input" placeholder="E-mail Admin"
                 style="margin-bottom: 15px;">
             <input type="password" id="login-pass" class="profile-input" placeholder="Senha"
                 style="margin-bottom: 20px;">
@@ -58,7 +58,7 @@
         </div>
     </div>
 
-    <!-- Header do Admin (Oculto até logar) -->
+    <!-- Header do Admin -->
     <div id="admin-wrapper" style="display: none;">
         <header class="navbar admin-navbar">
             <div class="nav-container" style="justify-content: space-between;">
@@ -85,8 +85,7 @@
             <section class="admin-dashboard">
                 <!-- Navegação de Abas -->
                 <div class="admin-tabs">
-                    <button class="admin-tab active" data-tab="tab-products"><i class="ph ph-hotdog"></i>
-                        Cardápio</button>
+                    <button class="admin-tab active" data-tab="tab-products"><i class="ph ph-hotdog"></i> Cardápio</button>
                     <button class="admin-tab" data-tab="tab-categories"><i class="ph ph-rows"></i> Categorias</button>
                     <button class="admin-tab" data-tab="tab-orders"><i class="ph ph-receipt"></i> Pedidos</button>
                     <button class="admin-tab" data-tab="tab-customers"><i class="ph ph-users"></i> Clientes</button>
@@ -94,14 +93,12 @@
                     <button class="admin-tab" data-tab="tab-settings"><i class="ph ph-gear"></i> Loja</button>
                 </div>
 
-                <!-- Aba Cardápio (Produtos) -->
+                <!-- Aba Cardápio -->
                 <div id="tab-products" class="admin-tab-content active">
                     <div class="admin-header">
                         <h2>Gerenciador de Cardápio</h2>
-                        <button id="btn-new-product" class="btn-primary"><i class="ph ph-plus"></i> Novo
-                            Produto</button>
+                        <button id="btn-new-product" class="btn-primary"><i class="ph ph-plus"></i> Novo Produto</button>
                     </div>
-                    <!-- Area Onde as Categorias/Produtos Serão Injetadas -->
                     <div id="admin-menu-container"></div>
                 </div>
 
@@ -109,8 +106,7 @@
                 <div id="tab-categories" class="admin-tab-content">
                     <div class="admin-header">
                         <h2>Categorias</h2>
-                        <button id="btn-new-category" class="btn-primary"><i class="ph ph-plus"></i> Nova
-                            Categoria</button>
+                        <button id="btn-new-category" class="btn-primary"><i class="ph ph-plus"></i> Nova Categoria</button>
                     </div>
                     <div id="admin-categories-container" class="admin-list-container"></div>
                 </div>
@@ -140,189 +136,106 @@
                     <div id="admin-coupons-container" class="admin-list-container"></div>
                 </div>
 
-                <!-- Aba Configurações (Loja) -->
+                <!-- Aba Configurações -->
                 <div id="tab-settings" class="admin-tab-content">
                     <div class="admin-header">
                         <h2>Configurações da Loja</h2>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <span id="store-status-text" style="font-weight: bold;">Carregando...</span>
-                            <button id="btn-toggle-store" class="btn-primary"
-                                style="background-color: var(--primary-red);"><i class="ph ph-power"></i>
-                                Alternar</button>
+                            <button id="btn-toggle-store" class="btn-primary" style="background-color: var(--primary-red);"><i class="ph ph-power"></i> Alternar</button>
                         </div>
                     </div>
 
                     <div class="glass-card" style="padding: 24px; margin-top: 20px;">
                         <h3><i class="ph ph-motorcycle"></i> Taxa de Entrega</h3>
-                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
-                            Defina o valor cobrado pela entrega. Use R$ 0,00 para entrega grátis. O cliente verá este
-                            valor no carrinho ao escolher "Entrega".
-                        </p>
                         <div style="display: flex; gap: 12px; align-items: center;">
-                            <div
-                                style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 16px;">
+                            <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 16px;">
                                 <span style="color: var(--text-muted); font-size: 1rem; font-weight: 600;">R$</span>
-                                <input type="number" id="delivery-fee-input" step="0.50" min="0" class="profile-input"
-                                    style="width: 100px; border: none; background: transparent; padding: 0; font-size: 1.1rem; font-weight: 700;"
-                                    placeholder="5.00">
+                                <input type="number" id="delivery-fee-input" step="0.50" min="0" class="profile-input" style="width: 100px; border: none; background: transparent; padding: 0; font-size: 1.1rem; font-weight: 700;">
                             </div>
-                            <button id="btn-save-delivery-fee" class="btn-primary" style="padding: 12px 20px;">
-                                <i class="ph ph-floppy-disk"></i> Salvar Taxa
-                            </button>
+                            <button id="btn-save-delivery-fee" class="btn-primary">Salvar Taxa</button>
                         </div>
                     </div>
 
                     <div class="glass-card" style="padding: 24px; margin-top: 20px;">
-                        <h3><i class="ph ph-clock"></i> Horários de Funcionamento</h3>
-                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
-                            Configure os horários de abertura e fechamento para cada dia da semana.
-                        </p>
-
-                        <form id="settings-form" style="display: flex; flex-direction: column; gap: 15px;">
-                            <div id="schedule-container" style="display: flex; flex-direction: column; gap: 10px;">
-                                <!-- Os dias serão gerados via JS -->
-                            </div>
-                            <button type="submit" class="btn-primary" style="margin-top: 15px; align-self: flex-start;">
-                                <i class="ph ph-floppy-disk"></i> Salvar Horários
-                            </button>
+                        <h3><i class="ph ph-clock"></i> Horários</h3>
+                        <form id="settings-form">
+                            <div id="schedule-container" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                            <button type="button" id="btn-save-schedule" class="btn-primary" style="margin-top: 15px;">Salvar Horários</button>
                         </form>
                     </div>
                 </div>
 
-
-                <!-- Loader compartilhado -->
                 <div id="admin-loader" class="loader-container">
                     <i class="ph ph-spinner ph-spin" style="font-size: 2rem; color: var(--primary-red);"></i>
-                    <p>Sincronizando com o Reino...</p>
+                    <p>Sincronizando...</p>
                 </div>
             </section>
         </main>
 
-        <!-- Modal Novo/Editar Produto -->
+        <!-- Modais -->
         <div id="modal-product" class="modal-overlay">
             <div class="modal-content glass-card">
                 <div class="modal-header">
-                    <h2 id="modal-title"><i class="ph-fill ph-hotdog"></i> Produto</h2>
+                    <h2>Produto</h2>
                     <button id="close-modal-product" class="btn-icon"><i class="ph ph-x"></i></button>
                 </div>
-
-                <div class="modal-body profile-body">
+                <div class="modal-body">
                     <form id="product-form">
                         <input type="hidden" id="prod-id">
-
+                        <div class="form-group"><label>Categoria</label><select id="prod-category" class="profile-input"></select></div>
+                        <div class="form-group"><label>Nome</label><input type="text" id="prod-name" class="profile-input" required></div>
+                        <div class="form-group"><label>Preço (R$)</label><input type="number" step="0.01" id="prod-price" class="profile-input" required></div>
+                        <div class="form-group"><label>Descrição</label><textarea id="prod-desc" class="profile-input"></textarea></div>
                         <div class="form-group">
-                            <label>Categoria</label>
-                            <select id="prod-category" class="profile-input" required></select>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Nome do Produto</label>
-                            <input type="text" id="prod-name" class="profile-input" required
-                                placeholder="Ex: Hot Dog Completo">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Preço (R$)</label>
-                            <input type="number" step="0.01" id="prod-price" class="profile-input" required
-                                placeholder="54.90">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Descrição/Ingredientes</label>
-                            <textarea id="prod-desc" class="profile-input" rows="3"
-                                placeholder="Molho, queijo, etc..."></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Imagem do Produto</label>
-                            <div class="upload-wrapper">
-                                <input type="file" id="prod-image-file" class="profile-input" accept="image/*">
-                                <span class="or-separator">OU URL:</span>
-                                <input type="url" id="prod-image-url" class="profile-input"
-                                    placeholder="https://unsplash.com/foto...">
-                            </div>
+                            <label>Imagem</label>
+                            <input type="file" id="prod-image-file" class="profile-input" accept="image/*">
+                            <input type="url" id="prod-image-url" class="profile-input" placeholder="Ou URL da imagem">
                         </div>
                     </form>
                 </div>
-
-                <div class="modal-footer">
-                    <button id="btn-save-product" class="btn-primary" style="width: 100%;">Salvar Produto</button>
-                </div>
+                <div class="modal-footer"><button id="btn-save-product" class="btn-primary" style="width: 100%;">Salvar</button></div>
             </div>
         </div>
 
-        <!-- Modal Novo/Editar Categoria -->
         <div id="modal-category" class="modal-overlay">
             <div class="modal-content glass-card">
                 <div class="modal-header">
-                    <h2 id="category-modal-title"><i class="ph-fill ph-rows"></i> Categoria</h2>
+                    <h2>Categoria</h2>
                     <button id="close-modal-category" class="btn-icon"><i class="ph ph-x"></i></button>
                 </div>
-                <div class="modal-body profile-body">
+                <div class="modal-body">
                     <form id="category-form">
                         <input type="hidden" id="cat-id">
-                        <div class="form-group">
-                            <label>Nome da Categoria</label>
-                            <input type="text" id="cat-name" class="profile-input" required
-                                placeholder="Ex: Pizzas Premium">
-                        </div>
-                        <div class="form-group">
-                            <label>Ordem de Exibição (Opcional)</label>
-                            <input type="number" id="cat-order" class="profile-input" placeholder="Ex: 5">
-                        </div>
+                        <div class="form-group"><label>Nome</label><input type="text" id="cat-name" class="profile-input" required></div>
+                        <div class="form-group"><label>Ordem</label><input type="number" id="cat-order" class="profile-input"></div>
                     </form>
                 </div>
-                <div class="modal-footer">
-                    <button id="btn-save-category" class="btn-primary" style="width: 100%;">Salvar Categoria</button>
-                </div>
+                <div class="modal-footer"><button id="btn-save-category" class="btn-primary" style="width: 100%;">Salvar</button></div>
             </div>
         </div>
 
-        <!-- Modal Novo/Editar Cupom -->
         <div id="modal-coupon" class="modal-overlay">
             <div class="modal-content glass-card" style="max-width: 400px;">
                 <div class="modal-header">
-                    <h2 id="coupon-modal-title"><i class="ph-fill ph-ticket"></i> Cupom</h2>
+                    <h2>Cupom</h2>
                     <button id="close-modal-coupon" class="btn-icon"><i class="ph ph-x"></i></button>
                 </div>
-                <div class="modal-body profile-body">
+                <div class="modal-body">
                     <form id="coupon-form">
                         <input type="hidden" id="coupon-id">
-                        <div class="form-group">
-                            <label>Código do Cupom</label>
-                            <input type="text" id="coupon-code" class="profile-input" required placeholder="Ex: NEO20H"
-                                style="text-transform: uppercase;">
-                        </div>
-                        <div class="form-group">
-                            <label>Porcentagem de Desconto (%)</label>
-                            <input type="number" id="coupon-discount" class="profile-input" required
-                                placeholder="Ex: 15" min="1" max="100">
-                        </div>
+                        <div class="form-group"><label>Código</label><input type="text" id="coupon-code" class="profile-input" required style="text-transform: uppercase;"></div>
+                        <div class="form-group"><label>Desconto (%)</label><input type="number" id="coupon-discount" class="profile-input" required></div>
                     </form>
                 </div>
-                <div class="modal-footer">
-                    <button id="btn-save-coupon" class="btn-primary" style="width: 100%;">Salvar Cupom</button>
-                </div>
+                <div class="modal-footer"><button id="btn-save-coupon" class="btn-primary" style="width: 100%;">Salvar</button></div>
             </div>
         </div>
 
-        <!-- Audio para Notificação de Pedido -->
-        <audio id="order-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"
-            preload="auto"></audio>
-
-    </div><!-- End Admin Wrapper -->
+        <audio id="order-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+    </div>
 
     <script src="admin.js"></script>
-    <!-- Registrar Service Worker PWA -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(registration => console.log('ServiceWorker PWA registrado no Admin: ', registration.scope))
-                    .catch(error => console.log('Falha ao registrar ServiceWorker no Admin: ', error));
-            });
-        }
-    </script>
 </body>
 
 </html>
