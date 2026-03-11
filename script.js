@@ -795,11 +795,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Auto-preenchimento (Login automático) ao completar 11 dígitos
             if (val.length === 11 && supabase) {
                 try {
-                    const formattedPhone = e.target.value.trim();
-                    // Busca segura via RPC (Bloqueamos o SELECT direto na tabela customers por segurança)
-                    const { data: customer, error: rpcErr } = await supabase.rpc('get_customer_by_phone', { phone_query: val });
-
-                    const profileRec = (customer && customer.length > 0) ? customer[0] : null;
+                    console.log("🔍 Buscando perfil para:", val);
+const { data: customer, error: rpcErr } = await supabase.rpc('get_customer_by_phone', { phone_query: val });
+if (rpcErr) console.error("❌ Erro RPC Perfil:", rpcErr);
+console.log("✅ Resultado Perfil:", customer);
+const profileRec = (customer && customer.length > 0) ? customer[0] : null;
 
                     if (profileRec) {
                         if (profileRec.full_name) inputName.value = profileRec.full_name;
@@ -910,9 +910,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 address: address
             }));
 
-            // Sync Supabase (REI NEO Tracker)
+                        // Sync Supabase (REI NEO Tracker)
             if (supabase) {
                 try {
+                    console.log("💾 Salvando perfil no Supabase:", profileData);
                     // Busca se já existe pelo telefone normalizado
                     const { data: existing, error: findError } = await supabase
                         .from('customers')
@@ -920,10 +921,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                         .eq('phone', phone)
                         .maybeSingle(); // maybeSingle não joga erro se não achar nada
 
+                    if (findError) console.error("❌ Erro ao buscar cliente existente:", findError);
+
                     if (existing) {
-                        await supabase.from('customers').update(profileData).eq('id', existing.id);
+                        console.log("📝 Atualizando cliente ID:", existing.id);
+                        const { error: updErr } = await supabase.from('customers').update(profileData).eq('id', existing.id);
+                        if (updErr) console.error("❌ Erro ao atualizar perfil:", updErr);
                     } else {
-                        await supabase.from('customers').insert([profileData]);
+                        console.log("✨ Criando novo cliente");
+                        const { error: insErr } = await supabase.from('customers').insert([profileData]);
+                        if (insErr) console.error("❌ Erro ao inserir perfil:", insErr);
                     }
                 } catch (e) {
                     console.warn("Sincronização com o banco falhou, mas dados salvos no aparelho.", e);
@@ -953,11 +960,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         let dbOrders = [];
         if (supabase && phone) {
             try {
+                console.log("🕰️ Buscando histórico para telefone:", phone);
                 // Busca SEGURA via RPC: O cliente não tem mais permissão de ler a tabela 'orders' diretamente.
                 // A função 'get_my_orders' no banco garante que ele só receba os SEUS pedidos.
                 const { data: orders, error: rpcErr } = await supabase.rpc('get_my_orders', { phone_query: phone });
 
-                if (orders) dbOrders = orders;
+                if (rpcErr) {
+                    console.error("❌ Erro RPC Histórico:", rpcErr);
+                } else {
+                    console.log("✅ Histórico recuperado:", orders);
+                    if (orders) dbOrders = orders;
+                }
             } catch (e) {
                 console.warn("Erro ao buscar histórico via RPC, fallback para LocalStorage.", e);
             }
