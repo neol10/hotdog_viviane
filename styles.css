@@ -1273,12 +1273,14 @@ body.light-mode .price-tag {
     justify-content: center;
     opacity: 0;
     visibility: hidden;
+    pointer-events: none; /* ESSENCIAL: Não bloqueia clique se invisível */
     transition: var(--transition-smooth);
 }
 
 .modal-overlay.active {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto; /* Reativa para o modal */
 }
 
 .modal-content {

@@ -1,0 +1,14 @@
+{
+  "name": "hotdog-viviane",
+  "version": "1.0.0",
+  "description": "Sistema de Gestão Suprema - Hotdog Viviane",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve .",
+    "start": "npx serve ."
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}

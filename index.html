@@ -51,7 +51,7 @@
                 regs.forEach(function (reg) { reg.update(); });
             });
             caches.keys().then(function (keys) {
-                keys.filter(function (k) { return k !== 'hotdog-viviane-cache-v4'; })
+                keys.filter(function (k) { return k !== 'hotdog-viviane-cache-v5'; })
                     .forEach(function (k) { caches.delete(k); });
             });
         }

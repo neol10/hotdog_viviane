@@ -199,7 +199,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         } catch (e) {
             console.error("Erro banco: ", e);
-            menuLoader.innerHTML = '<p style="color:red;">Não foi possível carregar o cardápio. Tente atualizar a página.</p>';
+            if (menuLoader) menuLoader.innerHTML = '<p style="color:red;">Não foi possível carregar o cardápio. Tente atualizar a página.</p>';
+        } finally {
+            // GARANTIA NUCLEAR: Independente de erro ou demora, a interatividade VOLTA (REI NEO V5)
+            if (menuLoader) menuLoader.style.display = 'none';
+            
+            const mainLoader = document.getElementById('loader') || document.querySelector('.loader-overlay');
+            if (mainLoader) {
+                mainLoader.classList.add('inactive');
+                document.body.classList.remove('loader-active');
+                setTimeout(() => mainLoader.style.display = 'none', 600);
+            }
+            
+            // Ativa eventos para o que carregou parcial ou placeholder
+            initScrollEvents();
         }
     }
 
