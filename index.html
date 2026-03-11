@@ -56,16 +56,7 @@
             });
         }
     </script>
-    <!-- OneSignal Web Push SDK -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    <script>
-        window.OneSignalDeferred = window.OneSignalDeferred || [];
-        OneSignalDeferred.push(async function (OneSignal) {
-            await OneSignal.init({
-                appId: "700c926f-2949-4753-8e3a-12ddbcb370e3",
-            });
-        });
-    </script>
+    <!-- OneSignal Removido Temporariamente para Fix de Domínio -->
 </head>
 
 <body>
@@ -122,26 +113,7 @@
             </div>
         </section>
 
-        <!-- Janela de Busca Suprema -->
-        <section class="menu-search-section">
-            <div class="menu-search-container">
-                <i class="ph ph-magnifying-glass search-icon"></i>
-                <input type="text" id="menu-search-input"
-                    placeholder="O que você quer comer hoje? (Ex: Frango, Calabresa...)"
-                    aria-label="Pesquisar no cardápio">
-            </div>
-        </section>
-
         <!-- Menu Navigation Anchors (Sticky) -->
-        <div class="search-nav-container" style="max-width:1280px; margin: 0 auto; padding: 1rem 2rem 0;">
-            <div style="position:relative; margin-bottom: 15px;">
-                <input type="text" id="menu-search-input" placeholder="Buscar por sabor, ingrediente..."
-                    style="width:100%; padding:14px 20px 14px 45px; border-radius:30px; border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-light); font-size:1rem; outline:none;" />
-                <i class="ph ph-magnifying-glass"
-                    style="position:absolute; left:18px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:1.2rem;"></i>
-            </div>
-        </div>
-
         <nav class="category-nav">
             <a href="#hot-dog" class="category-link active"><i class="ph ph-hotdog"></i> Hot Dogs</a>
             <a href="#pastel" class="category-link"><i class="ph ph-cooking-pot"></i> Pastéis</a>
