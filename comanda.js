@@ -94,7 +94,7 @@ loginForm.addEventListener('submit', async (e) => {
 btnLogout.addEventListener('click', async () => {
     await dbClient.auth.signOut();
     if (realtimeSubscription) dbClient.removeChannel(realtimeSubscription);
-    location.reload();
+    window.location.href = './';
 });
 
 // FUNÇÕES DE BOTÕES DE TOPO

@@ -565,7 +565,7 @@ addSafeListener('btn-login', 'click', async () => {
 
 addSafeListener('btn-logout', 'click', async () => {
     await dbClient.auth.signOut();
-    location.reload();
+    window.location.href = './';
 });
 
 // Auto-init
