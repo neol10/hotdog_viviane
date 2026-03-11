@@ -491,9 +491,8 @@ body {
     justify-content: center;
     gap: 1rem;
     padding: 1rem 2rem;
-    position: sticky;
-    top: 80px;
-    /* abaixo da navbar */
+    position: relative;
+    /* não fixo mais na tela */
     z-index: 900;
     background: rgba(10, 14, 23, 0.85);
     backdrop-filter: blur(12px);
