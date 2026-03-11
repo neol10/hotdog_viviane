@@ -211,7 +211,8 @@ window.openProductModal = (id = null) => {
     prodModal.classList.add('active');
 };
 
-document.getElementById('btn-save-product').addEventListener('click', async () => {
+addSafeListener('product-form', 'submit', async (e) => {
+    e.preventDefault(); // Prevent default form submission
     const categoryId = document.getElementById('prod-category').value;
     const name = document.getElementById('prod-name').value.trim();
     const priceStr = document.getElementById('prod-price').value;
@@ -301,7 +302,7 @@ window.openCategoryModal = (id = null) => {
     catModal.classList.add('active');
 };
 
-document.getElementById('btn-save-category').addEventListener('click', async () => {
+addSafeListener('btn-save-category', 'click', async () => {
     const name = document.getElementById('cat-name').value.trim();
     if (!name) return alert("ERRO: O Nome da Categoria é obrigatório!");
 
@@ -432,7 +433,7 @@ window.openCouponModal = (id = null) => {
     couponModal.classList.add('active');
 };
 
-document.getElementById('btn-save-coupon').addEventListener('click', async () => {
+addSafeListener('btn-save-coupon', 'click', async () => {
     const code = document.getElementById('coupon-code').value.trim().toUpperCase();
     const discount = parseInt(document.getElementById('coupon-discount').value);
 
@@ -599,7 +600,13 @@ function renderSettings() {
     });
 }
 
-document.getElementById('btn-toggle-store').addEventListener('click', async (e) => {
+// Safely attach event listeners
+function addSafeListener(id, event, callback) {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener(event, callback);
+}
+
+addSafeListener('btn-toggle-store', 'click', async (e) => {
     e.preventDefault();
     if (!globalSettings) return;
 
@@ -609,7 +616,7 @@ document.getElementById('btn-toggle-store').addEventListener('click', async (e) 
 });
 
 // Salvar Taxa de Entrega
-document.getElementById('btn-save-delivery-fee').addEventListener('click', async () => {
+addSafeListener('btn-save-delivery-fee', 'click', async () => {
     const feeInput = document.getElementById('delivery-fee-input');
     const fee = parseFloat(feeInput.value);
     if (isNaN(fee) || fee < 0) return alert('ERRO: Digite um valor válido para a taxa (ex: 5.50)');
@@ -626,7 +633,7 @@ document.getElementById('btn-save-delivery-fee').addEventListener('click', async
     }
 });
 
-document.getElementById('settings-form').addEventListener('submit', async (e) => {
+addSafeListener('settings-form', 'submit', async (e) => {
     e.preventDefault();
     showLoader(true);
 
@@ -648,13 +655,13 @@ document.getElementById('settings-form').addEventListener('submit', async (e) =>
     fetchAllData();
 });
 
-// Eventos de Fechar Modal
-document.getElementById('btn-new-product').onclick = () => window.openProductModal();
-document.getElementById('btn-new-category').onclick = () => window.openCategoryModal();
-document.getElementById('btn-new-coupon').onclick = () => window.openCouponModal();
-document.getElementById('close-modal-product').onclick = () => prodModal.classList.remove('active');
-document.getElementById('close-modal-category').onclick = () => catModal.classList.remove('active');
-document.getElementById('close-modal-coupon').onclick = () => couponModal.classList.remove('active');
+// Eventos de Fechar/Abrir Modal de forma Segura
+addSafeListener('btn-new-product', 'click', () => window.openProductModal());
+addSafeListener('btn-new-category', 'click', () => window.openCategoryModal());
+addSafeListener('btn-new-coupon', 'click', () => window.openCouponModal());
+addSafeListener('close-modal-product', 'click', () => { if(prodModal) prodModal.classList.remove('active'); });
+addSafeListener('close-modal-category', 'click', () => { if(catModal) catModal.classList.remove('active'); });
+addSafeListener('close-modal-coupon', 'click', () => { if(couponModal) couponModal.classList.remove('active'); });
 
 // 9. LÓGICA DE LOGIN ADMIN (SUPABASE AUTH)
 const loginOverlay = document.getElementById('login-overlay');
