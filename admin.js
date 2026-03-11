@@ -211,8 +211,7 @@ window.openProductModal = (id = null) => {
     prodModal.classList.add('active');
 };
 
-addSafeListener('product-form', 'submit', async (e) => {
-    e.preventDefault(); // Prevent default form submission
+addSafeListener('btn-save-product', 'click', async () => {
     const categoryId = document.getElementById('prod-category').value;
     const name = document.getElementById('prod-name').value.trim();
     const priceStr = document.getElementById('prod-price').value;
@@ -566,10 +565,20 @@ function renderSettings() {
     container.innerHTML = '';
 
     const daysOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const daysTranslation = {
+        'monday': 'Segunda-feira',
+        'tuesday': 'Terça-feira',
+        'wednesday': 'Quarta-feira',
+        'thursday': 'Quinta-feira',
+        'friday': 'Sexta-feira',
+        'saturday': 'Sábado',
+        'sunday': 'Domingo'
+    };
     const schedule = globalSettings.schedule || {};
 
     daysOrder.forEach(key => {
-        const day = schedule[key] || { name: key, isOpen: true, start: "19:00", end: "23:00" };
+        const day = schedule[key] || { name: daysTranslation[key], isOpen: true, start: "19:00", end: "23:00" };
+        const dayName = daysTranslation[key] || key;
         const row = document.createElement('div');
         row.style.display = 'flex';
         row.style.gap = '10px';
@@ -582,7 +591,7 @@ function renderSettings() {
             <div style="width: 120px;">
                 <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
                     <input type="checkbox" id="check-${key}" ${day.isOpen ? 'checked' : ''}>
-                    ${day.name}
+                    ${dayName}
                 </label>
             </div>
             <input type="time" id="start-${key}" value="${day.start}" class="profile-input" style="width: 120px;" ${!day.isOpen ? 'disabled' : ''}>
@@ -633,17 +642,24 @@ addSafeListener('btn-save-delivery-fee', 'click', async () => {
     }
 });
 
-addSafeListener('settings-form', 'submit', async (e) => {
-    e.preventDefault();
+addSafeListener('btn-save-schedule', 'click', async () => {
     showLoader(true);
 
     const daysOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const daysTranslation = {
+        'monday': 'Segunda-feira',
+        'tuesday': 'Terça-feira',
+        'wednesday': 'Quarta-feira',
+        'thursday': 'Quinta-feira',
+        'friday': 'Sexta-feira',
+        'saturday': 'Sábado',
+        'sunday': 'Domingo'
+    };
     const newSchedule = {};
 
     daysOrder.forEach(key => {
-        const nameNode = document.getElementById(`check-${key}`).parentElement.textContent;
         newSchedule[key] = {
-            name: nameNode.trim(),
+            name: daysTranslation[key],
             isOpen: document.getElementById(`check-${key}`).checked,
             start: document.getElementById(`start-${key}`).value,
             end: document.getElementById(`end-${key}`).value
