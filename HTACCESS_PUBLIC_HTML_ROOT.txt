@@ -1,0 +1,7 @@
+# Coloque este conteúdo no .htaccess da RAIZ do site (public_html/)
+# Objetivo: ao acessar https://newneo.com.br/ redirecionar para /agenciadaspizzas/
+
+RewriteEngine On
+
+# Redireciona apenas a raiz (/) para a subpasta
+RewriteRule ^$ agenciadaspizzas/ [R=302,L]

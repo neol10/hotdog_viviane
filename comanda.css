@@ -1,0 +1,671 @@
+/* =========================================================================
+   COMANDA DIGITAL - ESTILOS ESPECÍFICOS PARA O KDS (Kitchen Display System)
+   ========================================================================= */
+
+/* Fundo mais escuro para o KDS para dar contraste e focar nos cards */
+.comanda-body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-dark);
+    /* Deleta o fundo neutro do styles.css default */
+    font-family: var(--font-main);
+    color: var(--text-light);
+    height: 100vh;
+    overflow: hidden;
+    /* O scroll será dentro das colunas */
+}
+
+/* ==========================================
+   TELA DE LOGIN DO KDS
+   ========================================== */
+.admin-login-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a1a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.login-card {
+    background: var(--bg-card);
+    padding: 40px;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.login-card h2 {
+    font-family: var(--font-title);
+    margin-bottom: 5px;
+    color: var(--text-light);
+}
+
+.login-card p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 25px;
+}
+
+.login-logo {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-bottom: 15px;
+    box-shadow: 0 0 15px rgba(227, 22, 57, 0.3);
+}
+
+/* ==========================================
+   DASHBOARD KDS (TELA PRINCIPAL)
+   ========================================== */
+.kds-dashboard {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+}
+
+.kds-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background: var(--bg-card);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    height: 70px;
+}
+
+.kds-logo-area {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.kds-logo-area img {
+    height: 40px;
+    border-radius: 5px;
+}
+
+.kds-logo-area h1 {
+    font-family: var(--font-title);
+    font-size: 1.4rem;
+    color: var(--text-light);
+    margin: 0;
+}
+
+.kds-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* ==========================================
+   STATUS AO VIVO
+   ========================================== */
+.realtime-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 6px 12px;
+    border-radius: 20px;
+    margin-right: 15px;
+}
+
+.pulse-dot {
+    width: 10px;
+    height: 10px;
+    background-color: var(--primary-green);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+    }
+
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+
+/* ==========================================
+   COLUNAS DO KDS (Lanes)
+   ========================================== */
+.kds-lanes {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    padding: 15px;
+    gap: 15px;
+    background: #111;
+}
+
+.kds-lane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.lane-header {
+    padding: 15px;
+    border-bottom: 2px solid;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.lane-header.pending {
+    border-color: var(--primary-red);
+}
+
+.lane-header.active {
+    border-color: var(--primary-yellow);
+}
+
+.lane-header.done {
+    border-color: var(--primary-green);
+}
+
+.lane-header h2 {
+    font-size: 1.1rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lane-header.pending h2 {
+    color: var(--primary-red);
+}
+
+.lane-header.active h2 {
+    color: var(--primary-yellow);
+}
+
+.lane-header.done h2 {
+    color: var(--primary-green);
+}
+
+.lane-count {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.lane-cards {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Scrollbar invisivel para os lanes */
+.lane-cards::-webkit-scrollbar {
+    width: 6px;
+}
+
+.lane-cards::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+
+/* ==========================================
+   CARDS DE PEDIDO
+   ========================================== */
+.kds-card {
+    background: #1c1f26;
+    /* Fundo levemente mais cinza/azulado pra soltar do fundo preto */
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    /* Mais respiro interno */
+    position: relative;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    animation: slideIn 0.3s ease-out forwards;
+}
+
+.kds-card.new {
+    border-left: 5px solid var(--primary-red);
+    box-shadow: 0 0 15px rgba(227, 22, 57, 0.2);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.kds-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
+    padding-bottom: 12px;
+}
+
+.kds-order-id {
+    font-size: 1.5rem;
+    /* Aumentado pra ver de longe */
+    font-weight: 900;
+    color: #ffffff;
+}
+
+.kds-order-time {
+    font-size: 0.95rem;
+    color: #a1a1aa;
+    /* Cinza claro */
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: bold;
+}
+
+.kds-order-time.late {
+    color: var(--primary-red);
+    font-weight: bold;
+}
+
+.kds-delivery-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+    width: 100%;
+    justify-content: center;
+    letter-spacing: 1px;
+}
+
+.kds-delivery-badge.entrega {
+    background: rgba(227, 22, 57, 0.2);
+    color: #ff4757;
+    border: 1px solid rgba(227, 22, 57, 0.4);
+}
+
+.kds-delivery-badge.retirada {
+    background: rgba(16, 185, 129, 0.2);
+    color: #2ed573;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.kds-customer {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: #f1f2f6;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.kds-items {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+}
+
+.kds-items li {
+    font-size: 1.2rem;
+    /* Tamanho maior para ver a pizza */
+    font-weight: 600;
+    color: #ffffff;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    /* Linha divisória mais visível */
+    display: flex;
+    align-items: center;
+}
+
+.kds-items li:last-child {
+    border-bottom: none;
+}
+
+.kds-items .qty {
+    background: var(--primary-red);
+    color: #fff;
+    font-weight: 900;
+    border-radius: 6px;
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 8px rgba(227, 22, 57, 0.5);
+}
+
+.kds-card-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.kds-card-actions button {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    /* Botões maiores */
+    padding: 12px;
+    border-radius: var(--radius-md);
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+}
+
+.kds-btn-done {
+    background: var(--primary-green);
+    color: #fff;
+}
+
+.kds-btn-done:hover {
+    background: #00b894;
+}
+
+/* ==========================================
+   ESTADO VAZIO
+   ========================================== */
+.kds-empty-state {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    padding: 30px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.kds-empty-state i {
+    font-size: 2rem;
+    opacity: 0.5;
+}
+
+/* ==========================================
+   CARDS DE PEDIDO COMPACTOS
+   ========================================== */
+.kds-card-compact {
+    background: #1c1f26;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: var(--radius-md);
+    padding: 15px;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.3s ease-out forwards;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.kds-card-compact:hover {
+    background: #252830;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+.kds-card-compact.new {
+    border-left: 5px solid var(--primary-red);
+    box-shadow: 0 0 15px rgba(227, 22, 57, 0.2);
+}
+
+.kds-compact-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.kds-compact-id {
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: #ffffff;
+}
+
+.kds-compact-time {
+    font-size: 0.9rem;
+    color: #a1a1aa;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.kds-compact-time.late {
+    color: var(--primary-red);
+}
+
+.kds-compact-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.kds-compact-client {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #f1f2f6;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60%;
+}
+
+.kds-compact-items-count {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+    font-size: 0.85rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: bold;
+}
+
+.kds-compact-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.kds-badge-mini {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.kds-badge-mini.entrega {
+    background: rgba(227, 22, 57, 0.2);
+    color: #ff4757;
+    border: 1px solid rgba(227, 22, 57, 0.4);
+}
+
+.kds-badge-mini.retirada {
+    background: rgba(16, 185, 129, 0.2);
+    color: #2ed573;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.kds-action-hint {
+    font-size: 0.8rem;
+    color: #a1a1aa;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Aumentado um pouco para separar do botão */
+    width: 100%;
+    justify-content: flex-end;
+}
+
+.btn-whatsapp-compact {
+    background: #25d366;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    text-decoration: none;
+    transition: transform 0.2s, background 0.2s;
+    pointer-events: all;
+}
+
+.btn-whatsapp-compact:hover {
+    background: #1eb954;
+    transform: scale(1.05);
+}
+
+/* ==========================================================================
+   KDS Flash Notification (Novo Pedido)
+   ========================================================================== */
+@keyframes flash-kds {
+    0% {
+        background-color: var(--bg-body);
+        box-shadow: inset 0 0 0 0 transparent;
+    }
+
+    50% {
+        background-color: rgba(227, 22, 57, 0.15);
+        box-shadow: inset 0 0 30px 10px rgba(227, 22, 57, 0.6);
+    }
+
+    100% {
+        background-color: var(--bg-body);
+        box-shadow: inset 0 0 0 0 transparent;
+    }
+}
+
+body.kds-flash {
+    animation: flash-kds 0.8s ease-in-out 3;
+}
+
+/* ==========================================================================
+   RESPONSIVIDADE DO KDS (Comanda)
+   ========================================================================== */
+@media (max-width: 768px) {
+
+    /* Header KDS: compactar */
+    .kds-header {
+        padding: 10px 15px;
+        height: auto;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .kds-logo-area h1 {
+        font-size: 1rem;
+    }
+
+    .kds-logo-area img {
+        height: 30px;
+    }
+
+    /* Ocultar label "Ao Vivo" em mobile */
+    .realtime-status span:not(.pulse-dot) {
+        display: none;
+    }
+
+    /* Body do KDS: permitir scroll (não travar) */
+    .comanda-body {
+        height: auto;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .kds-dashboard {
+        height: auto;
+        min-height: 100vh;
+    }
+
+    /* Lanes: scroll horizontal em vez de 3 colunas */
+    .kds-lanes {
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        padding: 10px;
+        gap: 10px;
+        height: calc(100vh - 120px);
+    }
+
+    .kds-lane {
+        min-width: 85vw;
+        flex: 0 0 85vw;
+        scroll-snap-align: start;
+    }
+
+    /* Cards do KDS: padding menor */
+    .kds-card {
+        padding: 14px;
+    }
+
+    .kds-order-id {
+        font-size: 1.2rem;
+    }
+
+    /* Login card: padding menor */
+    .login-card {
+        padding: 24px 20px;
+        margin: 1rem;
+    }
+}
+
+@media (max-width: 420px) {
+    .kds-lane {
+        min-width: 92vw;
+        flex: 0 0 92vw;
+    }
+
+    .lane-header h2 {
+        font-size: 0.95rem;
+    }
+}

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - Hotdog Viviane</title>
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+    <!-- Reproveitamento do CSS Principal -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ef4444">
+    <link rel="apple-touch-icon" href="img/logo_hotdog_viviane.png">
+    <link rel="icon" href="img/logo_hotdog_viviane.png" type="image/png">
+    <link rel="shortcut icon" href="img/logo_hotdog_viviane.png" type="image/png">
+    <!-- Estilos Adicionais do Admin -->
+    <link rel="stylesheet" href="admin.css">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- Supabase Client (CDN) -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <!-- OneSignal Web Push SDK -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function (OneSignal) {
+            await OneSignal.init({
+                appId: "700c926f-2949-4753-8e3a-12ddbcb370e3",
+            });
+        });
+    </script>
+</head>
+
+<body>
+
+    <!-- Bloqueio de Login (Segurança Rei Neo) -->
+    <div id="login-overlay" class="modal-overlay active"
+        style="z-index: 99999; backdrop-filter: blur(15px); background: rgba(15, 18, 27, 0.98);">
+        <div class="modal-content glass-card"
+            style="max-width: 350px; text-align: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 40px rgba(220, 53, 69, 0.2); backdrop-filter: blur(16px); background: rgba(30, 8, 8, 0.85);">
+            <div style="margin-bottom: 24px;">
+                <i class="ph-fill ph-shield-check" style="font-size: 3rem; color: var(--primary-red);"></i>
+                <h2 style="margin-top: 10px; color: white;">Acesso Restrito</h2>
+            </div>
+            <input type="text" id="login-user" class="profile-input" placeholder="Usuário Admin"
+                style="margin-bottom: 15px;">
+            <input type="password" id="login-pass" class="profile-input" placeholder="Senha"
+                style="margin-bottom: 20px;">
+            <button id="btn-login" class="btn-mustard" style="width: 100%; border-radius: var(--radius-full); padding: 12px; font-size: 1.1rem;">Liberar Acesso</button>
+            <p id="login-error"
+                style="color: var(--primary-red); display: none; margin-top: 15px; font-size: 0.9rem; font-weight: bold;">
+                Credenciais inválidas.</p>
+        </div>
+    </div>
+
+    <!-- Header do Admin (Oculto até logar) -->
+    <div id="admin-wrapper" style="display: none;">
+        <header class="navbar admin-navbar">
+            <div class="nav-container" style="justify-content: space-between;">
+                <a href="/" class="logo">
+                    <img src="img/logo_hotdog_viviane.png" alt="Logo" class="logo-img" style="filter: grayscale(100%);">
+                    <span>Painel <strong>Admin</strong></span>
+                </a>
+
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <a href="/comanda" target="_blank"
+                        style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; padding: 10px 18px; background: #fbbf24; color: #111827; border-radius: 8px; font-weight: 800; text-decoration: none; border: 2px solid #f59e0b; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); text-transform: uppercase;">
+                        <i class="ph-fill ph-cooking-pot" style="font-size: 1.2rem;"></i> KDS Cozinha
+                    </a>
+                    <a href="/" class="btn-secondary" style="font-size: 0.85rem; padding: 8px 16px;">
+                        <i class="ph ph-arrow-left"></i> Voltar pro Site
+                    </a>
+                    <button id="btn-logout" class="btn-primary" style="font-size: 0.85rem; padding: 8px 16px;"><i
+                            class="ph ph-sign-out"></i> Sair</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="admin-main">
+            <section class="admin-dashboard">
+                <!-- Navegação de Abas -->
+                <div class="admin-tabs">
+                    <button class="admin-tab active" data-tab="tab-products"><i class="ph ph-hotdog"></i>
+                        Cardápio</button>
+                    <button class="admin-tab" data-tab="tab-categories"><i class="ph ph-rows"></i> Categorias</button>
+                    <button class="admin-tab" data-tab="tab-orders"><i class="ph ph-receipt"></i> Pedidos</button>
+                    <button class="admin-tab" data-tab="tab-customers"><i class="ph ph-users"></i> Clientes</button>
+                    <button class="admin-tab" data-tab="tab-coupons"><i class="ph ph-ticket"></i> Cupons</button>
+                    <button class="admin-tab" data-tab="tab-settings"><i class="ph ph-gear"></i> Loja</button>
+                </div>
+
+                <!-- Aba Cardápio (Produtos) -->
+                <div id="tab-products" class="admin-tab-content active">
+                    <div class="admin-header">
+                        <h2>Gerenciador de Cardápio</h2>
+                        <button id="btn-new-product" class="btn-primary"><i class="ph ph-plus"></i> Novo
+                            Produto</button>
+                    </div>
+                    <!-- Area Onde as Categorias/Produtos Serão Injetadas -->
+                    <div id="admin-menu-container"></div>
+                </div>
+
+                <!-- Aba Categorias -->
+                <div id="tab-categories" class="admin-tab-content">
+                    <div class="admin-header">
+                        <h2>Categorias</h2>
+                        <button id="btn-new-category" class="btn-primary"><i class="ph ph-plus"></i> Nova
+                            Categoria</button>
+                    </div>
+                    <div id="admin-categories-container" class="admin-list-container"></div>
+                </div>
+
+                <!-- Aba Pedidos -->
+                <div id="tab-orders" class="admin-tab-content">
+                    <div class="admin-header">
+                        <h2>Últimos Pedidos</h2>
+                    </div>
+                    <div id="admin-orders-container" class="admin-list-container"></div>
+                </div>
+
+                <!-- Aba Clientes -->
+                <div id="tab-customers" class="admin-tab-content">
+                    <div class="admin-header">
+                        <h2>Clientes Cadastrados</h2>
+                    </div>
+                    <div id="admin-customers-container" class="admin-list-container"></div>
+                </div>
+
+                <!-- Aba Cupons -->
+                <div id="tab-coupons" class="admin-tab-content">
+                    <div class="admin-header">
+                        <h2>Gestor de Cupons</h2>
+                        <button id="btn-new-coupon" class="btn-primary"><i class="ph ph-plus"></i> Novo Cupom</button>
+                    </div>
+                    <div id="admin-coupons-container" class="admin-list-container"></div>
+                </div>
+
+                <!-- Aba Configurações (Loja) -->
+                <div id="tab-settings" class="admin-tab-content">
+                    <div class="admin-header">
+                        <h2>Configurações da Loja</h2>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <span id="store-status-text" style="font-weight: bold;">Carregando...</span>
+                            <button id="btn-toggle-store" class="btn-primary"
+                                style="background-color: var(--primary-red);"><i class="ph ph-power"></i>
+                                Alternar</button>
+                        </div>
+                    </div>
+
+                    <div class="glass-card" style="padding: 24px; margin-top: 20px;">
+                        <h3><i class="ph ph-motorcycle"></i> Taxa de Entrega</h3>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+                            Defina o valor cobrado pela entrega. Use R$ 0,00 para entrega grátis. O cliente verá este
+                            valor no carrinho ao escolher "Entrega".
+                        </p>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <div
+                                style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 16px;">
+                                <span style="color: var(--text-muted); font-size: 1rem; font-weight: 600;">R$</span>
+                                <input type="number" id="delivery-fee-input" step="0.50" min="0" class="profile-input"
+                                    style="width: 100px; border: none; background: transparent; padding: 0; font-size: 1.1rem; font-weight: 700;"
+                                    placeholder="5.00">
+                            </div>
+                            <button id="btn-save-delivery-fee" class="btn-primary" style="padding: 12px 20px;">
+                                <i class="ph ph-floppy-disk"></i> Salvar Taxa
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="glass-card" style="padding: 24px; margin-top: 20px;">
+                        <h3><i class="ph ph-clock"></i> Horários de Funcionamento</h3>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+                            Configure os horários de abertura e fechamento para cada dia da semana.
+                        </p>
+
+                        <form id="settings-form" style="display: flex; flex-direction: column; gap: 15px;">
+                            <div id="schedule-container" style="display: flex; flex-direction: column; gap: 10px;">
+                                <!-- Os dias serão gerados via JS -->
+                            </div>
+                            <button type="submit" class="btn-primary" style="margin-top: 15px; align-self: flex-start;">
+                                <i class="ph ph-floppy-disk"></i> Salvar Horários
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+
+                <!-- Loader compartilhado -->
+                <div id="admin-loader" class="loader-container">
+                    <i class="ph ph-spinner ph-spin" style="font-size: 2rem; color: var(--primary-red);"></i>
+                    <p>Sincronizando com o Reino...</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Modal Novo/Editar Produto -->
+        <div id="modal-product" class="modal-overlay">
+            <div class="modal-content glass-card">
+                <div class="modal-header">
+                    <h2 id="modal-title"><i class="ph-fill ph-hotdog"></i> Produto</h2>
+                    <button id="close-modal-product" class="btn-icon"><i class="ph ph-x"></i></button>
+                </div>
+
+                <div class="modal-body profile-body">
+                    <form id="product-form">
+                        <input type="hidden" id="prod-id">
+
+                        <div class="form-group">
+                            <label>Categoria</label>
+                            <select id="prod-category" class="profile-input" required></select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nome do Produto</label>
+                            <input type="text" id="prod-name" class="profile-input" required
+                                placeholder="Ex: Hot Dog Completo">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Preço (R$)</label>
+                            <input type="number" step="0.01" id="prod-price" class="profile-input" required
+                                placeholder="54.90">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Descrição/Ingredientes</label>
+                            <textarea id="prod-desc" class="profile-input" rows="3"
+                                placeholder="Molho, queijo, etc..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Imagem do Produto</label>
+                            <div class="upload-wrapper">
+                                <input type="file" id="prod-image-file" class="profile-input" accept="image/*">
+                                <span class="or-separator">OU URL:</span>
+                                <input type="url" id="prod-image-url" class="profile-input"
+                                    placeholder="https://unsplash.com/foto...">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button id="btn-save-product" class="btn-primary" style="width: 100%;">Salvar Produto</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Novo/Editar Categoria -->
+        <div id="modal-category" class="modal-overlay">
+            <div class="modal-content glass-card">
+                <div class="modal-header">
+                    <h2 id="category-modal-title"><i class="ph-fill ph-rows"></i> Categoria</h2>
+                    <button id="close-modal-category" class="btn-icon"><i class="ph ph-x"></i></button>
+                </div>
+                <div class="modal-body profile-body">
+                    <form id="category-form">
+                        <input type="hidden" id="cat-id">
+                        <div class="form-group">
+                            <label>Nome da Categoria</label>
+                            <input type="text" id="cat-name" class="profile-input" required
+                                placeholder="Ex: Pizzas Premium">
+                        </div>
+                        <div class="form-group">
+                            <label>Ordem de Exibição (Opcional)</label>
+                            <input type="number" id="cat-order" class="profile-input" placeholder="Ex: 5">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-save-category" class="btn-primary" style="width: 100%;">Salvar Categoria</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Novo/Editar Cupom -->
+        <div id="modal-coupon" class="modal-overlay">
+            <div class="modal-content glass-card" style="max-width: 400px;">
+                <div class="modal-header">
+                    <h2 id="coupon-modal-title"><i class="ph-fill ph-ticket"></i> Cupom</h2>
+                    <button id="close-modal-coupon" class="btn-icon"><i class="ph ph-x"></i></button>
+                </div>
+                <div class="modal-body profile-body">
+                    <form id="coupon-form">
+                        <input type="hidden" id="coupon-id">
+                        <div class="form-group">
+                            <label>Código do Cupom</label>
+                            <input type="text" id="coupon-code" class="profile-input" required placeholder="Ex: NEO20H"
+                                style="text-transform: uppercase;">
+                        </div>
+                        <div class="form-group">
+                            <label>Porcentagem de Desconto (%)</label>
+                            <input type="number" id="coupon-discount" class="profile-input" required
+                                placeholder="Ex: 15" min="1" max="100">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-save-coupon" class="btn-primary" style="width: 100%;">Salvar Cupom</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audio para Notificação de Pedido -->
+        <audio id="order-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"
+            preload="auto"></audio>
+
+    </div><!-- End Admin Wrapper -->
+
+    <script src="admin.js"></script>
+    <!-- Registrar Service Worker PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => console.log('ServiceWorker PWA registrado no Admin: ', registration.scope))
+                    .catch(error => console.log('Falha ao registrar ServiceWorker no Admin: ', error));
+            });
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página não encontrada - Hotdog Viviane</title>
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" href="img/logo_hotdog_viviane.png">
+    <link rel="shortcut icon" type="image/png" href="img/logo_hotdog_viviane.png">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        :root {
+            --bg-body: #0a0e17;
+            --text-light: #f8fafc;
+            --primary-red: #e31639;
+            --primary-red-hover: #ff2a4d;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            background-image: radial-gradient(circle at top right, rgba(227, 22, 57, 0.1), transparent 40%);
+        }
+
+        .error-code {
+            font-size: 8rem;
+            font-weight: 800;
+            margin: 0;
+            line-height: 1;
+            background: linear-gradient(135deg, var(--primary-red), #ff7b00);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .error-icon {
+            font-size: 5rem;
+            color: var(--primary-red);
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-15px);
+            }
+
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            max-width: 400px;
+            margin-bottom: 30px;
+        }
+
+        .btn-home {
+            background: var(--primary-red);
+            color: #fff;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(227, 22, 57, 0.4);
+        }
+
+        .btn-home:hover {
+            background: var(--primary-red-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(227, 22, 57, 0.6);
+        }
+    </style>
+</head>
+
+<body>
+
+    <i class="ph-fill ph-hotdog error-icon"></i>
+    <div class="error-code">404</div>
+    <h1>Eita, o dogão esfriou!</h1>
+    <p>A página que você tentou acessar não existe ou foi devorada. Vamos voltar para o cardápio e pedir um novo lanche?</p>
+
+    <a href="/" class="btn-home">
+        <i class="ph-fill ph-house"></i> Voltar ao Início
+    </a>
+
+</body>
+
+</html>

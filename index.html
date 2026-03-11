@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotdog Viviane 🌭 – Cardápio Digital e Delivery</title>
+
+    <!-- SEO Básico -->
+    <meta name="description"
+        content="Peça os melhores hot dogs prensados e de colher com o cardápio digital do Hotdog Viviane. Entrega rápida e sabores incríveis!">
+    <meta name="keywords" content="hotdog, lanchonete, delivery, cardápio digital, hot dog prensado, pedido online, bebidas, sucos">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Hotdog Viviane">
+
+    <!-- Open Graph (WhatsApp, Facebook, Instagram, etc.) -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Hotdog Viviane 🌭 – Peça o Seu Hot Dog Agora!">
+    <meta property="og:description"
+        content="Os hot dogs mais recheados e saborosos! Escolha no cardápio digital, peça pelo WhatsApp e receba em casa. Rápido, fácil e delicioso. 🌭🔥">
+    <meta property="og:image" content="img/logo_hotdog_viviane.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="Hotdog Viviane">
+
+    <!-- Twitter Card (bônus) -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Hotdog Viviane 🌭 – Cardápio Digital">
+    <meta name="twitter:description"
+        content="Os melhores hot dogs e pastéis da região. Peça agora pelo cardápio digital!">
+    <meta name="twitter:image" content="img/logo_hotdog_viviane.png">
+
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+    <!-- CSS -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ef4444">
+    <link rel="apple-touch-icon" href="img/logo_hotdog_viviane.png?v=2">
+    <link rel="icon" href="img/logo_hotdog_viviane.png?v=2" type="image/png">
+    <link rel="shortcut icon" href="img/logo_hotdog_viviane.png?v=2" type="image/png">
+    <!-- Phosphor Icons (para ícones modernos e limpos) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Limpeza de cache antigo (remove SW e caches velhos) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function (regs) {
+                regs.forEach(function (reg) { reg.update(); });
+            });
+            caches.keys().then(function (keys) {
+                keys.filter(function (k) { return k !== 'hotdog-viviane-cache-v2'; })
+                    .forEach(function (k) { caches.delete(k); });
+            });
+        }
+    </script>
+    <!-- OneSignal Web Push SDK -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function (OneSignal) {
+            await OneSignal.init({
+                appId: "700c926f-2949-4753-8e3a-12ddbcb370e3",
+            });
+        });
+    </script>
+</head>
+
+<body>
+
+    <header class="navbar">
+        <div class="nav-container">
+            <span class="logo" id="logo-secret" style="cursor: default; user-select: none;">
+                <img src="img/logo_hotdog_viviane.png?v=3" alt="Logo Hotdog Viviane" class="logo-img" onerror="this.src='./img/logo_hotdog_viviane.png'">
+                <span>Hotdog Viviane</span>
+            </span>
+            <script>
+                document.getElementById('logo-secret').addEventListener('dblclick', function () {
+                    window.location.href = '/admin';
+                });
+            </script>
+            <nav class="nav-links" id="nav-links">
+                <a href="#hot-dog">Hot Dogs</a>
+                <a href="#pastel">Pastéis</a>
+                <a href="#sucos">Sucos</a>
+                <a href="#bebidas">Bebidas</a>
+            </nav>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <button id="theme-toggle" class="btn-icon" aria-label="Alternar Tema"><i class="ph ph-sun"></i></button>
+                <button id="header-profile-btn" class="btn-icon" aria-label="Meu Perfil" title="Meu Perfil"
+                    style="position: relative;">
+                    <i class="ph ph-user"></i>
+                    <span id="profile-badge" class="profile-badge" style="display: none;"></span>
+                </button>
+                <button id="header-cart-btn" class="btn-icon" aria-label="Ver Carrinho" style="position: relative;">
+                    <i class="ph ph-shopping-cart"></i>
+                    <span id="cart-badge" class="cart-badge" style="display: none;">0</span>
+                </button>
+                <a href="#hot-dog" class="btn-primary nav-pedido-btn">Fazer Pedido</a>
+                <button id="hamburger-btn" class="btn-icon hamburger-btn" aria-label="Menu">
+                    <i class="ph ph-list" id="hamburger-icon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="glow-orb orb-1"></div>
+            <div class="glow-orb orb-2"></div>
+            
+            <div class="hero-content">
+                <h1 class="hero-title">O Verdadeiro <br><span class="text-highlight">Hot Dog</span> Premium</h1>
+                <p class="hero-subtitle">Massa artesanal, ingredientes selecionados e o segredo do sabor que conquistou a cidade.</p>
+                <div class="hero-cta">
+                    <a href="#hot-dog" class="btn-mustard btn-large">Fazer Pedido Agora</a>
+                    <a href="#dynamic-menu-container" class="btn-outline btn-large" style="margin-left: 15px; border: 1px solid rgba(255,255,255,0.2); background:transparent; color:white; padding: 16px 32px; border-radius: 12px; font-weight: 600;">Ver Menu</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Janela de Busca Suprema -->
+        <section class="menu-search-section">
+            <div class="menu-search-container">
+                <i class="ph ph-magnifying-glass search-icon"></i>
+                <input type="text" id="menu-search-input"
+                    placeholder="O que você quer comer hoje? (Ex: Frango, Calabresa...)"
+                    aria-label="Pesquisar no cardápio">
+            </div>
+        </section>
+
+        <!-- Menu Navigation Anchors (Sticky) -->
+        <div class="search-nav-container" style="max-width:1280px; margin: 0 auto; padding: 1rem 2rem 0;">
+            <div style="position:relative; margin-bottom: 15px;">
+                <input type="text" id="menu-search-input" placeholder="Buscar por sabor, ingrediente..."
+                    style="width:100%; padding:14px 20px 14px 45px; border-radius:30px; border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-light); font-size:1rem; outline:none;" />
+                <i class="ph ph-magnifying-glass"
+                    style="position:absolute; left:18px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:1.2rem;"></i>
+            </div>
+        </div>
+
+        <nav class="category-nav">
+            <a href="#hot-dog" class="category-link active"><i class="ph ph-hotdog"></i> Hot Dogs</a>
+            <a href="#pastel" class="category-link"><i class="ph ph-cooking-pot"></i> Pastéis</a>
+            <a href="#sucos" class="category-link"><i class="ph ph-drop"></i> Sucos</a>
+            <a href="#bebidas" class="category-link"><i class="ph ph-wine"></i> Bebidas</a>
+        </nav>
+
+        <!-- Container do Cardápio -->
+        <div class="menu-container" id="dynamic-menu-container">
+            <!-- Skeletons enquanto busca do banco -->
+            <div id="menu-loader" class="menu-grid" style="padding: 2rem 0;">
+                <!-- Injectar 8 skeletons falsos -->
+                <!-- Repetir o skeleton-card -->
+                <div class="glass-card product-card" style="box-shadow:none; border-color:transparent;">
+                    <div class="skeleton-img skeleton"></div>
+                    <div class="card-content">
+                        <div class="skeleton-title skeleton"></div>
+                        <div class="skeleton-text skeleton"></div>
+                        <div class="skeleton-text skeleton short"></div>
+                        <div class="skeleton-button skeleton"></div>
+                    </div>
+                </div>
+                <!-- 2 -->
+                <div class="glass-card product-card" style="box-shadow:none; border-color:transparent;">
+                    <div class="skeleton-img skeleton"></div>
+                    <div class="card-content">
+                        <div class="skeleton-title skeleton"></div>
+                        <div class="skeleton-text skeleton"></div>
+                        <div class="skeleton-text skeleton short"></div>
+                        <div class="skeleton-button skeleton"></div>
+                    </div>
+                </div>
+                <!-- 3 -->
+                <div class="glass-card product-card" style="box-shadow:none; border-color:transparent;">
+                    <div class="skeleton-img skeleton"></div>
+                    <div class="card-content">
+                        <div class="skeleton-title skeleton"></div>
+                        <div class="skeleton-text skeleton"></div>
+                        <div class="skeleton-text skeleton short"></div>
+                        <div class="skeleton-button skeleton"></div>
+                    </div>
+                </div>
+                <!-- 4 -->
+                <div class="glass-card product-card" style="box-shadow:none; border-color:transparent;">
+                    <div class="skeleton-img skeleton"></div>
+                    <div class="card-content">
+                        <div class="skeleton-title skeleton"></div>
+                        <div class="skeleton-text skeleton"></div>
+                        <div class="skeleton-text skeleton short"></div>
+                        <div class="skeleton-button skeleton"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Os <section>, categorias e produtos (glass-card) agora serão injetados via JS Aqui dentro! -->
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <img src="img/logo_hotdog_viviane.png" alt="Logo" class="logo-img-small">
+                <h3>Hotdog Viviane</h3>
+                <p>O melhor hotdog da região! 🌭🔥<br>Ingredientes selecionados e sabor inigualável.</p>
+            </div>
+            <div class="footer-info">
+                <h4>Horário de Funcionamento</h4>
+                <ul id="footer-schedule-list">
+                    <li><i class="ph ph-spinner ph-spin"></i> Carregando horários...</li>
+                </ul>
+            </div>
+            <div class="footer-contact">
+                <h4>Contato</h4>
+                <p><i class="ph ph-map-pin"></i> Eng. Coelho - SP, 13165-000</p>
+                <p><i class="ph ph-phone"></i> Fixo: (19) 3858-1007</p>
+                <p><i class="ph ph-whatsapp-logo"></i> <a href="https://wa.me/5519981651230" target="_blank"
+                        style="color: inherit; text-decoration: none;">(19) 98165-1230</a></p>
+                <div class="social-links">
+                    <a href="https://www.instagram.com/vivianehotdog" target="_blank" aria-label="Instagram"><i
+                            class="ph ph-instagram-logo"></i></a>
+                    <a href="https://www.facebook.com/vivianehotdog" target="_blank" aria-label="Facebook"><i
+                            class="ph ph-facebook-logo"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; <span style="cursor: pointer;" ondblclick="window.location.href='/admin'">2026</span> Agência
+                do Hotdog Viviane. Todos os direitos reservados.</p>
+            <p class="developer-credit">Desenvolvido por <a href="https://newneo.com.br" target="_blank">newneo</a></p>
+        </div>
+    </footer>
+
+    <!-- Modal / Carrinho de Compras -->
+    <div id="cart-modal" class="modal-overlay">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h2><i class="ph-fill ph-shopping-cart"></i> Seu Pedido</h2>
+                <button id="close-cart" class="btn-icon"><i class="ph ph-x"></i></button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Itens do carrinho serão injetados aqui via JS, inicialmente mostramos estado vazio -->
+                <div class="empty-cart-msg">
+                    <i class="ph ph-shopping-bag"></i>
+                    <p>Seu carrinho está vazio.</p>
+                    <span>Adicione alguns lanches deliciosos!</span>
+                </div>
+
+                <!-- Estrutura de exemplo (ficará oculta quando vazio) -->
+                <div class="cart-items-container" style="display: none;">
+                    <!-- Item injetado via JS -->
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <!-- Seletor de Tipo de Pedido: Retirada vs Entrega -->
+                <div id="delivery-selector" style="display: flex; gap: 8px; margin-bottom: 16px;">
+                    <button id="btn-retirada" class="delivery-option-btn active" data-type="retirada">
+                        <i class="ph ph-storefront"></i> Retirada no Local
+                    </button>
+                    <button id="btn-entrega" class="delivery-option-btn" data-type="entrega">
+                        <i class="ph ph-motorcycle"></i> Entrega
+                    </button>
+                </div>
+                <div id="delivery-fee-line"
+                    style="display: none; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px; padding: 8px 12px; background: rgba(255,255,255,0.04); border-radius: 8px;">
+                    <i class="ph ph-map-pin"></i> Taxa de Entrega: <strong id="delivery-fee-display"
+                        style="color: var(--text-light);">R$ 0,00</strong>
+                </div>
+
+                <!-- Área de Cupom -->
+                <div class="cart-coupon-area" style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <input type="text" id="coupon-input" class="profile-input" placeholder="Cupom de Desconto"
+                        style="text-transform: uppercase;">
+                    <button id="btn-apply-coupon" class="btn-secondary" style="white-space: nowrap;">Aplicar</button>
+                </div>
+                <p id="coupon-msg" style="font-size: 0.85rem; margin-bottom: 10px; font-weight: bold; display: none;">
+                </p>
+
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <strong id="cart-total-price">R$ 0,00</strong>
+                </div>
+                <!-- O botão de finalizar será ativado na tarefa 5 -->
+                <button id="checkout-btn" class="btn-primary" style="width: 100%; margin-top: 16px;" disabled>Finalizar
+                    Pedido</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal / Perfil do Usuário -->
+    <div id="profile-modal" class="modal-overlay">
+        <div class="modal-content glass-card" style="max-height: 90vh;">
+            <div class="modal-header">
+                <h2><i class="ph-fill ph-user-circle"></i> Meu Perfil</h2>
+                <button id="close-profile" class="btn-icon"><i class="ph ph-x"></i></button>
+            </div>
+
+            <div class="modal-body profile-body">
+
+                <div class="profile-tabs">
+                    <button class="profile-tab active" data-tab="dados">Meus Dados</button>
+                    <button class="profile-tab" data-tab="historico">Histórico</button>
+                </div>
+
+                <!-- Aba 1: Dados do Cliente -->
+                <div id="tab-dados" class="profile-tab-content active">
+                    <div class="form-group">
+                        <label for="profile-name">Nome Completo</label>
+                        <input type="text" id="profile-name" placeholder="Ex: João Silva" class="profile-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="profile-phone">Celular (WhatsApp)</label>
+                        <input type="tel" id="profile-phone" placeholder="(XX) XXXXX-XXXX" class="profile-input"
+                            maxlength="15">
+                    </div>
+                    <div class="form-group">
+                        <label for="profile-address">Endereço Principal</label>
+                        <textarea id="profile-address" placeholder="Rua, Número, Bairro, Complemento"
+                            class="profile-input" rows="3"></textarea>
+                    </div>
+                    <button id="btn-save-profile" class="btn-primary" style="width: 100%; margin-top: 10px;">Salvar
+                        Dados</button>
+                    <p id="profile-save-msg"
+                        style="color: #10b981; font-size: 0.85rem; text-align: center; margin-top: 10px; display: none;">
+                        Dados salvos com sucesso no seu dispositivo!</p>
+                </div>
+
+                <!-- Aba 2: Histórico de Pedidos -->
+                <div id="tab-historico" class="profile-tab-content">
+                    <div id="orders-history-container">
+                        <div class="empty-cart-msg">
+                            <i class="ph ph-clock-counter-clockwise"></i>
+                            <p>Nenhum pedido anterior encontrado.</p>
+                            <span>Seus próximos pedidos ficarão salvos aqui.</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal / Detalhes do Produto (Tela Cheia) -->
+    <div id="product-detail-modal" class="modal-overlay">
+        <!-- Removido o modal-content/glass-card para não distorcer com paddings internos -->
+        <div class="product-detail-layout">
+            <button id="close-product-detail" class="btn-icon header-back-btn"><i class="ph ph-arrow-left"></i></button>
+
+            <div class="product-detail-hero">
+                <!-- Imagem preenchida via JS -->
+                <div id="detail-image" class="detail-image-box"></div>
+                <div class="detail-hero-info">
+                    <span id="detail-badge" class="badge-featured" style="display:none;">POPULAR</span>
+                    <h2 id="detail-title">&nbsp;</h2>
+                    <p id="detail-desc">&nbsp;</p>
+                    <div class="detail-price-row">
+                        <strong id="detail-price">R$ 0,00</strong>
+                    </div>
+                    <!-- Botão de Compartilhar via WhatsApp -->
+                    <button id="btn-share-product" class="btn-share" style="margin-top: 15px;">
+                        <i class="ph-fill ph-whatsapp-logo"></i> Compartilhar
+                    </button>
+                </div>
+            </div>
+
+            <div class="product-detail-scrollable">
+                <!-- Seção Personalize (Injetado via JS dependendo da categoria) -->
+                <div id="detail-extras-section" style="display: none;">
+                    <h4 class="detail-section-title"><i class="ph ph-faders"></i> Personalize seu pedido</h4>
+                    <div id="detail-extras-list" class="extras-list">
+                        <!-- Checkboxes / Options injetados aqui -->
+                    </div>
+                </div>
+
+                <!-- Seção Cross-sell (Relacionados) -->
+                <div id="detail-related-section" style="display: none;">
+                    <h4 class="detail-section-title" style="text-transform: uppercase;">Combina muito bem com</h4>
+                    <div id="detail-related-list" class="related-scroller">
+                        <!-- Cards horizontais injetados aqui -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer fixo (Mobile-friendly) -->
+            <div class="product-detail-footer">
+                <div class="qty-selector primary-qty">
+                    <button id="detail-qty-minus"><i class="ph ph-minus"></i></button>
+                    <span id="detail-qty-value">1</span>
+                    <button id="detail-qty-plus"><i class="ph ph-plus"></i></button>
+                </div>
+                <button id="btn-add-detail-cart" class="btn-primary btn-add-full">
+                    <i class="ph ph-shopping-bag"></i> Adicionar • <span id="detail-total-price">R$ 0,00</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal / Sucesso (Comprovante) -->
+    <div id="success-modal" class="modal-overlay">
+        <div class="modal-content glass-card" style="text-align: center; padding: 40px 20px;">
+            <i class="ph-fill ph-check-circle" style="font-size: 5rem; color: #10b981; margin-bottom: 20px;"></i>
+            <h2 style="margin-bottom: 10px;">Pedido Confirmado!</h2>
+            <p style="color: var(--text-muted); margin-bottom: 25px;">Seu pedido foi registrado no sistema.</p>
+
+            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 25px;">
+                <p style="font-size: 0.9rem; margin-bottom: 5px;">Número do Pedido</p>
+                <h3 id="success-order-id" style="font-size: 2rem; color: var(--primary-red); margin: 0;">#0000</h3>
+            </div>
+
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">Para a loja começar a preparar,
+                confirme no WhatsApp!</p>
+
+            <button id="btn-success-whatsapp" class="btn-primary"
+                style="width: 100%; font-size: 1.1rem; padding: 14px; background: #25d366; box-shadow: 0 4px 15px rgba(37,211,102,0.4);">
+                <i class="ph-fill ph-whatsapp-logo"></i> Enviar Confirmação
+            </button>
+            <button id="btn-success-close" class="btn-secondary"
+                style="width: 100%; margin-top: 10px; border:none; background:transparent;">Fechar e voltar pro
+                início</button>
+        </div>
+    </div>
+
+    <!-- Guia de Instalação iOS (PWA) -->
+    <div id="ios-install-guide" class="ios-modal" style="display: none;">
+        <div class="ios-modal-content glass-card">
+            <button id="close-ios-guide" class="ios-close-btn">&times;</button>
+            <div class="ios-guide-header">
+                <img src="img/logo_hotdog_viviane.png" alt="App Icon" class="ios-app-icon">
+                <div>
+                    <h3>Instalar App</h3>
+                    <p>Hotdog Viviane</p>
+                </div>
+            </div>
+            <div class="ios-guide-steps">
+                <div class="ios-step">
+                    <span class="ios-step-num">1</span>
+                    <p>Toque no ícone de <strong>Compartilhar</strong> <i class="ph ph-export"></i> na barra inferior.
+                    </p>
+                </div>
+                <div class="ios-step">
+                    <span class="ios-step-num">2</span>
+                    <p>Role para baixo e toque em <strong>"Adicionar à Tela de Início"</strong> <i
+                            class="ph ph-plus-square"></i>.</p>
+                </div>
+            </div>
+            <div class="ios-guide-arrow">
+                <i class="ph ph-caret-double-down"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script para Interatividade & Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+    <!-- Registrar Service Worker PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => console.log('ServiceWorker PWA registrado com sucesso: ', registration.scope))
+                    .catch(error => console.log('Falha ao registrar ServiceWorker PWA: ', error));
+            });
+        }
+    </script>
+</body>
+
+</html>

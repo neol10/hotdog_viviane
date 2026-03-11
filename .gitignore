@@ -1,0 +1,12 @@
+# Node
+node_modules/
+npm-debug.log
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.tmp
+
+# Locais (não commitar)
+*.log
+.env

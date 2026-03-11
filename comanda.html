@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comanda Digital - Cozinha</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="comanda.css">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="img/logo_hotdog_viviane.png">
+    <link rel="icon" href="img/logo_hotdog_viviane.png" type="image/png">
+    <link rel="shortcut icon" href="img/logo_hotdog_viviane.png" type="image/png">
+    <!-- OneSignal Web Push SDK -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function (OneSignal) {
+            await OneSignal.init({
+                appId: "700c926f-2949-4753-8e3a-12ddbcb370e3",
+            });
+        });
+    </script>
+</head>
+
+<body class="comanda-body">
+    <!-- Overlay de Loading (Login / Initial Fetch) -->
+    <div id="loader" class="loader-overlay active">
+        <div class="loader-spinner"></div>
+    </div>
+
+    <!-- TELA DE LOGIN (KDS) -->
+    <div id="login-screen" class="admin-login-screen">
+        <div class="login-card glass-card">
+            <img src="img/logo_hotdog_viviane.png" alt="Logo" class="login-logo">
+            <h2>Comanda Digital</h2>
+            <p>Acesso restrito à cozinha/equipe</p>
+
+            <form id="login-form">
+                <div class="form-group">
+                    <label>E-mail (Equipe/Admin)</label>
+                    <input type="email" id="email" required placeholder="admin@hotdogviviane.com.br"
+                        class="profile-input">
+                </div>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" id="password" required placeholder="••••••••" class="profile-input">
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">Entrar na
+                    Comanda</button>
+            </form>
+            <p id="login-error" style="color: var(--primary-red); margin-top: 15px; display: none;"></p>
+        </div>
+    </div>
+
+    <!-- TELA PRINCIPAL DO KDS -->
+    <div id="kds-dashboard" class="kds-dashboard" style="display: none;">
+        <header class="kds-header">
+            <div class="kds-logo-area">
+                <img src="img/logo_hotdog_viviane.png" alt="Logo">
+                <h1>Painel da Cozinha (KDS)</h1>
+            </div>
+
+            <div class="kds-controls">
+                <!-- Tempo Real Status -->
+                <div class="realtime-status" id="realtime-status-container">
+                    <span class="pulse-dot" id="realtime-dot"></span> <span id="realtime-text">Conectando...</span>
+                </div>
+
+                <button id="btn-test-sound" class="btn-icon tooltip" title="Testar Som e Notificação">
+                    <i class="ph ph-megaphone"></i>
+                </button>
+                <button id="btn-sound" class="btn-icon tooltip" title="Ligar/Desligar Som">
+                    <i id="icon-sound" class="ph-fill ph-bell-ringing"></i>
+                </button>
+                <button id="btn-fullscreen" class="btn-icon tooltip" title="Tela Cheia">
+                    <i class="ph ph-corners-out"></i>
+                </button>
+                <button id="btn-logout" class="btn-secondary"><i class="ph ph-sign-out"></i> Sair</button>
+            </div>
+        </header>
+
+        <!-- Container de Listas do KDS -->
+        <div class="kds-lanes">
+            <!-- PENDENTES (Novos Pedidos) -->
+            <div class="kds-lane" id="lane-pendente">
+                <div class="lane-header pending">
+                    <h2><i class="ph-fill ph-receipt"></i> Novos Pedidos</h2>
+                    <span id="count-pendente" class="lane-count">0</span>
+                </div>
+                <div class="lane-cards" id="cards-pendente">
+                    <!-- Cards de Pedido Injetados via JS -->
+                </div>
+            </div>
+
+            <!-- PREPARANDO (Na Cozinha) -->
+            <div class="kds-lane" id="lane-preparando">
+                <div class="lane-header active">
+                    <h2><i class="ph-fill ph-cooking-pot"></i> Preparando</h2>
+                    <span id="count-preparando" class="lane-count">0</span>
+                </div>
+                <div class="lane-cards" id="cards-preparando">
+                    <!-- Cards de Pedido Injetados via JS -->
+                </div>
+            </div>
+
+            <!-- PRONTOS (Aguardando Despacho) -->
+            <div class="kds-lane" id="lane-pronto">
+                <div class="lane-header done">
+                    <h2><i class="ph-fill ph-check-circle"></i> Prontos (Despacho)</h2>
+                    <span id="count-pronto" class="lane-count">0</span>
+                </div>
+                <div class="lane-cards" id="cards-pronto">
+                    <!-- Cards de Pedido Injetados via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE DETALHES DO PEDIDO -->
+    <div id="kds-order-modal" class="modal-overlay"
+        style="display: none; z-index: 99999; backdrop-filter: blur(8px); background: rgba(10, 10, 10, 0.85); position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; justify-content: center; align-items: center;">
+        <div class="kds-modal-content"
+            style="background: #1c1f26; border: 1px solid rgba(255,255,255,0.15); border-radius: var(--radius-lg); width: 90%; max-width: 600px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+
+            <div class="kds-modal-header"
+                style="padding: 20px; border-bottom: 1px dashed rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+                <h2 id="modal-order-id" style="margin: 0; font-size: 1.8rem; color: #fff;">#0000</h2>
+                <button id="close-kds-modal" class="btn-icon" style="color: #ef4444; font-size: 1.5rem;"><i
+                        class="ph ph-x-circle"></i></button>
+            </div>
+
+            <div class="kds-modal-body" style="padding: 20px; overflow-y: auto; flex: 1;">
+                <div id="modal-order-badge" style="margin-bottom: 20px;"></div>
+
+                <div id="modal-order-customer"
+                    style="font-size: 1.2rem; font-weight: bold; color: #f1f2f6; margin-bottom: 10px;">
+                    <i class="ph ph-user"></i> <span id="modal-customer-name">Cliente</span>
+                </div>
+
+                <div id="modal-order-address"
+                    style="font-size: 1rem; color: #a1a1aa; margin-bottom: 20px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                    <!-- Preenchido via JS -->
+                </div>
+
+                <h3
+                    style="color: #fff; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
+                    Itens do Pedido</h3>
+                <ul id="modal-order-items" class="kds-items" style="list-style: none; padding: 0; margin: 0;">
+                    <!-- Itens Injetados -->
+                </ul>
+            </div>
+
+            <div class="kds-modal-footer" id="modal-order-actions"
+                style="padding: 20px; background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 15px;">
+                <!-- Botões de Ação Injetados -->
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ÁUDIO DE NOTIFICAÇÃO -->
+    <audio id="notification-sound" preload="auto">
+        <!-- Um som genérico em base64 pequeno para não depender de arquivo de terceiros -->
+        <source
+            src="data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
+            type="audio/mpeg">
+    </audio>
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="comanda.js"></script>
+</body>
+
+</html>

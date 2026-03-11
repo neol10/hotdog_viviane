@@ -1,0 +1,278 @@
+/* ==========================================================================
+   Estilos Específicos do Painel Admin (Opcional - usa a base do styles.css)
+   ========================================================================== */
+
+body.admin-bg {
+    background: var(--bg-dark); /* Fundo Vermelho Escuro Premium */
+}
+
+/* Modifica a navbar para o admin puxar pro topo sem sticky */
+.admin-navbar {
+    position: relative;
+    background: rgba(20, 20, 25, 0.95);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.admin-main {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 0 24px;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.admin-header h2 {
+    color: var(--text-light);
+    font-size: 1.8rem;
+}
+
+/* Loader Base */
+.loader-container {
+    text-align: center;
+    padding: 60px 0;
+    color: var(--text-muted);
+}
+
+.loader-container p {
+    margin-top: 10px;
+    font-size: 0.95rem;
+}
+
+/* Listagem de Categorias */
+.admin-category {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    margin-bottom: 24px;
+    padding: 24px;
+}
+
+.admin-category h3 {
+    color: var(--text-light);
+    font-size: 1.3rem;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 10px;
+}
+
+.admin-products-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Item Produto Lista */
+.admin-product-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-card); /* Efeito Vidro */
+    border: 1px solid var(--border-color);
+    padding: 14px 20px;
+    border-radius: var(--radius-md);
+    transition: var(--transition-smooth);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.admin-product-item:hover {
+    background: var(--bg-card-hover);
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.admin-product-info {
+    flex: 1;
+}
+
+.admin-product-info h4 {
+    color: var(--text-light);
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+}
+
+.admin-product-info p {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    max-width: 80%;
+}
+
+.admin-product-price {
+    font-weight: 700;
+    color: var(--primary-red);
+    margin-right: 20px;
+    font-size: 1.1rem;
+}
+
+/* Botões do Item */
+.admin-product-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-toggle-status {
+    background: transparent;
+    border: 1px solid #10b981;
+    color: #10b981;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.btn-toggle-status.is-paused {
+    border-color: #f59e0b;
+    color: #f59e0b;
+}
+
+.btn-edit-item {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* Navegação por Abas */
+.admin-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 12px;
+}
+
+.admin-tab {
+    background: rgba(255, 255, 255, 0.03); /* Estilo Cápsula Inativa */
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    padding: 10px 22px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: var(--radius-full);
+    transition: var(--transition-smooth);
+}
+
+.admin-tab:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+}
+
+.admin-tab.active {
+    background: linear-gradient(135deg, var(--primary-red) 0%, #bb2d3b 100%);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 15px var(--primary-red-glow);
+}
+
+.admin-tab-content {
+    display: none;
+}
+
+.admin-tab-content.active {
+    display: block;
+}
+
+/* Listagem Genérica (Pedidos/Clientes/Categorias) */
+.admin-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.admin-list-item {
+    background: var(--bg-card); /* Efeito Vidro */
+    border: 1px solid var(--border-color);
+    padding: 16px 20px;
+    border-radius: var(--radius-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: var(--transition-smooth);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.admin-list-item:hover {
+    background: var(--bg-card-hover);
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Área de Upload */
+.upload-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.or-separator {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin: 4px 0;
+    font-weight: 700;
+}
+
+/* Modal Ajustes Especiais */
+#modal-product .modal-content,
+#modal-category .modal-content {
+    max-width: 500px;
+}
+
+/* Fix para visibilidade de selects em alguns navegadores/modos */
+select.profile-input option {
+    background-color: #1a1d29;
+    color: white;
+}
+
+
+.admin-order-card {
+    border-left: 4px solid var(--primary-red);
+}
+
+.admin-order-status {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.status-pendente {
+    background: #f59e0b;
+    color: #000;
+}
+
+.status-preparando {
+    background: #3b82f6;
+    color: #fff;
+}
+
+.status-enviado {
+    background: #8b5cf6;
+    color: #fff;
+}
+
+.status-entregue {
+    background: #10b981;
+    color: #fff;
+}
+
+.order-items-summary {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 5px;
+}
