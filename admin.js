@@ -75,6 +75,9 @@ async function fetchAllData(isSilent = false) {
             dbClient.from('settings').select('*').eq('id', 1).single()
         ]);
 
+        if (cats.error) console.error("Erro categorias:", cats.error);
+        if (prods.error) console.error("Erro produtos:", prods.error);
+
         localCategories = cats.data || [];
         localProducts = prods.data || [];
         localOrders = orders.data || [];
@@ -173,13 +176,21 @@ window.openProductModal = (id = null) => {
     populateCategorySelect();
 
     if (id) {
-        const p = localProducts.find(x => x.id === id);
+        console.log("Editando ID:", id);
+        console.log("Tipos no localProducts:", localProducts.map(x => ({id: x.id, type: typeof x.id})));
+        
+        // Converte ambos para String para comparação 100% segura
+        const p = localProducts.find(x => String(x.id) === String(id));
+        
         if (p) {
-            document.getElementById('prod-category').value = p.category_id;
+            console.log("Encontrei o produto:", p);
+            document.getElementById('prod-category').value = String(p.category_id);
             document.getElementById('prod-name').value = p.name;
             document.getElementById('prod-price').value = p.price;
             document.getElementById('prod-desc').value = p.description || '';
             document.getElementById('prod-image-url').value = p.image_url || '';
+        } else {
+            console.error("ERRO: Produto ID " + id + " não encontrado em localProducts!", localProducts);
         }
     }
     prodModal.classList.add('active');
@@ -252,7 +263,8 @@ window.openCategoryModal = (id = null) => {
     catForm.reset();
     document.getElementById('cat-id').value = id || '';
     if (id) {
-        const c = localCategories.find(x => x.id === id);
+        // Converte IDs para String para comparação segura
+        const c = localCategories.find(x => String(x.id) === String(id));
         if (c) {
             document.getElementById('cat-name').value = c.name;
             document.getElementById('cat-order').value = c.order_index;

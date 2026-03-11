@@ -1,16 +1,16 @@
-const CACHE_NAME = 'hotdog-viviane-cache-v2';
+const CACHE_NAME = 'hotdog-viviane-cache-v3';
 const ASSETS_TO_CACHE = [
     './',
-    '/admin',
-    '/comanda',
+    './admin.html',
+    './comanda.html',
     './styles.css',
+    './admin.css',
     './comanda.css',
     './script.js',
     './admin.js',
     './comanda.js',
     './manifest.json',
-    './img/logo_hotdog_viviane.png',
-    './404.html'
+    './img/logo_hotdog_viviane.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -39,24 +39,35 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-    // Ignora requisições pro Supabase para não ter conflito de cache com dados dinâmicos
-    if (event.request.url.includes('supabase.co')) {
+    const url = event.request.url;
+
+    // Ignora Supabase e extensões de navegador
+    if (url.includes('supabase.co') || url.includes('chrome-extension')) {
         return;
     }
 
+    // Estratégia Network-First para arquivos de lógica (HTML, JS, CSS)
+    // Isso garante que mudanças no Admin apareçam na hora
+    if (event.request.mode === 'navigate' || url.endsWith('.js') || url.endsWith('.css') || url.endsWith('.html')) {
+        event.respondWith(
+            fetch(event.request)
+                .then((response) => {
+                    const clonedResponse = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, clonedResponse);
+                    });
+                    return response;
+                })
+                .catch(() => caches.match(event.request))
+        );
+        return;
+    }
+
+    // Cache-First para imagens e outros assets estáticos
     event.respondWith(
         caches.match(event.request)
             .then((response) => {
-                if (response) {
-                    return response;
-                }
-                return fetch(event.request).catch(() => {
-                    // Fallback se estiver offline
-                    // Se for navegação de HTML, retorna o index
-                    if (event.request.mode === 'navigate') {
-                        return caches.match('./');
-                    }
-                });
+                return response || fetch(event.request);
             })
     );
 });
