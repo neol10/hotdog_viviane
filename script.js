@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const abertura = timeToMinutes(todayConfig.start);
             const fechamento = timeToMinutes(todayConfig.end);
 
-            estaAberto = settings.is_open && todayConfig.isOpen && (horaAtual >= abertura && horaAtual < fechamento);
+            estaAberto = true; // FORCE OPEN (REI NEO V666)
 
             if (!estaAberto) {
                 const banner = document.createElement('div');
