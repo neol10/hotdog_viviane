@@ -223,7 +223,11 @@ async function uploadImage(file) {
     const ext = file.name.split('.').pop();
     const fileName = `${Date.now()}.${ext}`;
     const filePath = `${fileName}`;
-    const { error } = await dbClient.storage.from('product-images').upload(filePath, file);
+    const { error } = await dbClient.storage.from('product-images').upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true,
+        contentType: file.type
+    });
     if (error) throw error;
     const { data: { publicUrl } } = dbClient.storage.from('product-images').getPublicUrl(filePath);
     return publicUrl;
