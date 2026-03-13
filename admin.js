@@ -165,11 +165,11 @@ window.openProductModal = (id = null) => {
 
         // 2. DEPOIS preenche os dados do produto (inclusive a categoria ja carregada no select)
         if (id) {
-            const p = localProducts.find(x => x.id === id);
+            const p = localProducts.find(x => String(x.id) === String(id));
             if (p) {
                 if (catSelect) catSelect.value = p.category_id;
                 document.getElementById('prod-name').value = p.name;
-                document.getElementById('prod-price').value = p.price;
+                document.getElementById('prod-price').value = p.price ? p.price.toFixed(2) : '';
                 document.getElementById('prod-desc').value = p.description || '';
                 document.getElementById('prod-image-url').value = p.image_url || '';
             }
@@ -270,7 +270,7 @@ window.openCategoryModal = (id = null) => {
         const idField = document.getElementById('cat-id');
         if (idField) idField.value = id || '';
         if (id) {
-            const c = localCategories.find(x => x.id === id);
+            const c = localCategories.find(x => String(x.id) === String(id));
             if (c) {
                 document.getElementById('cat-name').value = c.name;
                 document.getElementById('cat-order').value = c.order_index;
@@ -337,7 +337,7 @@ window.openCouponModal = (id = null) => {
         form.reset();
         document.getElementById('coupon-id').value = id || '';
         if (id) {
-            const c = localCoupons.find(x => x.id === id);
+            const c = localCoupons.find(x => String(x.id) === String(id));
             if (c) {
                 document.getElementById('coupon-code').value = c.code;
                 document.getElementById('coupon-discount').value = c.discount_percentage;
@@ -391,6 +391,18 @@ function renderCustomers() {
     const container = document.getElementById('admin-customers-container');
     if (!container) return;
     container.innerHTML = localCustomers.length ? '' : '<p>Sem clientes.</p>';
+    localCustomers.forEach(c => {
+        const item = document.createElement('div');
+        item.className = 'admin-list-item';
+        item.innerHTML = `
+            <div>
+                <strong><i class="ph ph-user"></i> ${esc(c.name || 'Sem nome')}</strong><br>
+                <div style="font-size: 0.9rem; color: #a1a1aa;"><i class="ph ph-phone"></i> ${esc(c.phone || '')}</div>
+                <div style="font-size: 0.85rem; color: #71717a; margin-top: 5px;"><i class="ph ph-map-pin"></i> ${esc(c.address || '')}</div>
+            </div>
+        `;
+        container.appendChild(item);
+    });
 }
 
 function renderSettings() {
@@ -476,6 +488,17 @@ addSafeListener('close-modal-coupon', 'click', () => document.getElementById('mo
 addSafeListener('btn-new-product', 'click', () => window.openProductModal());
 addSafeListener('btn-new-category', 'click', () => window.openCategoryModal());
 addSafeListener('btn-new-coupon', 'click', () => window.openCouponModal());
+
+// Máscara de preço do produto
+addSafeListener('prod-price', 'input', (e) => {
+    let val = e.target.value.replace(/\D/g, "");
+    if (!val) {
+        e.target.value = "";
+        return;
+    }
+    val = (parseInt(val, 10) / 100).toFixed(2);
+    e.target.value = val;
+});
 
 // LOGIN
 addSafeListener('btn-login', 'click', checkManualLogin);

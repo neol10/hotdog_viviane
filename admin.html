@@ -225,8 +225,8 @@
 
                         <div class="form-group">
                             <label>Preço (R$)</label>
-                            <input type="number" step="0.01" id="prod-price" class="profile-input" required
-                                placeholder="54.90">
+                            <input type="text" inputmode="numeric" id="prod-price" class="profile-input" required
+                                placeholder="0.00">
                         </div>
 
                         <div class="form-group">
@@ -314,7 +314,7 @@
 
     </div><!-- End Admin Wrapper -->
 
-    <script src="admin.js"></script>
+    <script src="admin.js?v=2.0.0"></script>
     <!-- Registrar Service Worker PWA -->
     <script>
         if ('serviceWorker' in navigator) {

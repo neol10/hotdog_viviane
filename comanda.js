@@ -43,6 +43,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // AUTENTICAÇÃO
 async function checkSession() {
+    // Se o usuário já logou no painel admin pelo mesmo navegador, também entra direto na comanda
+    if (localStorage.getItem('hotdog_admin_logged') === 'true') {
+        showKdsDashboard();
+        return;
+    }
+
     const { data: { session } } = await dbClient.auth.getSession();
     if (session) {
         showKdsDashboard();
@@ -93,6 +99,7 @@ loginForm.addEventListener('submit', async (e) => {
 
 btnLogout.addEventListener('click', async () => {
     await dbClient.auth.signOut();
+    localStorage.removeItem('hotdog_admin_logged');
     if (realtimeSubscription) dbClient.removeChannel(realtimeSubscription);
     location.reload();
 });
