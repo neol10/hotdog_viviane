@@ -489,7 +489,7 @@ if (loginPassInp) loginPassInp.addEventListener('keydown', (e) => { if (e.key ==
 function checkManualLogin() {
     const user = document.getElementById('login-user').value.trim();
     const pass = document.getElementById('login-pass').value.trim();
-    if (user.toLowerCase() === 'admin' && pass === 'Admin166480') {
+    if (user.toLowerCase() === 'adminhotdogviviane@gmail.com' && pass === 'Admin166480*-') {
         localStorage.setItem('hotdog_admin_logged', 'true');
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('admin-wrapper').style.display = 'block';
