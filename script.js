@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     // Renderização Uniforme: Todos usam o layout de card com imagem agora (Grid)
                     // Exceto se quisermos manter a lista para algo muito específico no futuro
                     sectionHtml += `
-                    <div class="glass-card product-card" data-aos="fade-up">
+                    <div class="glass-card product-card open-detail-btn" data-aos="fade-up" data-id="${prod.id}" data-name="${prod.name}" data-price="${prod.price}" style="cursor: pointer;">
                         <div class="card-image-wrapper">
                             <div class="img-placeholder" ${bgImg}></div>
                             <span class="price-tag" style="background: linear-gradient(135deg, var(--primary-yellow), #e0a800); color: #07090e; font-weight: 800;">${formattedPrice}</span>
@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div class="card-content">
                             <h3 class="product-title">${prod.name}</h3>
                             <p class="product-desc">${prod.description || ''}</p>
-                            <button class="btn-mustard open-detail-btn" style="width:100%; justify-content:center; padding: 12px;" data-name="${prod.name}" data-price="${prod.price}" ${disabledAttr}><i class="ph ph-plus"></i> Adicionar ao Carrinho</button>
+                            <button class="btn-mustard" style="width:100%; justify-content:center; padding: 12px;" ${disabledAttr}><i class="ph ph-plus"></i> Adicionar ao Carrinho</button>
                         </div>
                     </div>`;
                 });
@@ -446,8 +446,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('click', (e) => {
         const detailBtn = e.target.closest('.open-detail-btn');
         if (detailBtn) {
+            let id = detailBtn.dataset.id;
             let name = detailBtn.dataset.name;
-            if (name) openProductDetail(name);
+            if (id) openProductDetailById(id);
+            else if (name) openProductDetail(name);
             return;
         }
 
@@ -505,6 +507,75 @@ document.addEventListener('DOMContentLoaded', async () => {
         let extrasTotal = currentExtras.reduce((sum, e) => sum + e.price, 0);
         let finalPrice = (basePrice + extrasTotal) * detailQty;
         document.getElementById('detail-total-price').textContent = 'R$ ' + finalPrice.toFixed(2).replace('.', ',');
+    }
+
+    function openProductDetailById(productId) {
+        if (!window.globalProducts) return;
+        const prod = window.globalProducts.find(p => p.id === productId || p.id == productId);
+        if (!prod) return;
+
+        currentDetailProduct = prod;
+        basePrice = prod.price;
+        resetDetailModal();
+
+        document.getElementById('detail-title').textContent = prod.name;
+        document.getElementById('detail-desc').textContent = prod.description || '';
+        document.getElementById('detail-price').textContent = 'R$ ' + prod.price.toFixed(2).replace('.', ',');
+
+        const imgBox = document.getElementById('detail-image');
+        if (prod.image_url) {
+            imgBox.style.backgroundImage = `url('${prod.image_url}')`;
+        } else {
+            imgBox.style.backgroundImage = 'none';
+            imgBox.style.backgroundColor = 'var(--bg-card)';
+        }
+
+        const extrasList = document.getElementById('detail-extras-list');
+        const extrasSection = document.getElementById('detail-extras-section');
+
+        // Os elementos fictícios de "Personalize seu pedido" foram removidos conforme solicitação.
+        // A lógica de opcionais virá dinamicamente do banco no futuro.
+        extrasSection.style.display = 'none';
+
+        const relatedList = document.getElementById('detail-related-list');
+        const relatedSection = document.getElementById('detail-related-section');
+        relatedList.innerHTML = '';
+
+        const crossSells = window.globalProducts.filter(p => p.id !== prod.id).slice(0, 5);
+        if (crossSells.length > 0) {
+            crossSells.forEach(rel => {
+                const rCard = document.createElement('div');
+                rCard.className = 'related-card';
+                const imgRel = rel.image_url || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=300&auto=format&fit=crop';
+                rCard.innerHTML = `
+                    <div class="related-img" style="background-image: url('${imgRel}'); background-color: var(--bg-card);"></div>
+                    <div class="related-info">
+                        <h5>${rel.name}</h5>
+                        <span>R$ ${rel.price.toFixed(2).replace('.', ',')}</span>
+                    </div>
+                `;
+                rCard.addEventListener('click', () => {
+                    openProductDetailById(rel.id);
+                });
+                relatedList.appendChild(rCard);
+            });
+            relatedSection.style.display = 'block';
+        } else {
+            relatedSection.style.display = 'none';
+        }
+
+        updateTotalDetailPrice();
+        if (productDetailModal) productDetailModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        // Lógica do botão Compartilhar
+        const btnShare = document.getElementById('btn-share-product');
+        if (btnShare) {
+            btnShare.onclick = () => {
+                const text = `🌭 Olha que delícia! Estou com vontade de pedir: *${prod.name}* no Hotdog Viviane.\n\nVeja no cardápio online: https://hotdogviviane.vercel.app/`;
+                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+            };
+        }
     }
 
     function openProductDetail(productName) {

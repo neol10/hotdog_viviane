@@ -1,6 +1,6 @@
 const supabaseUrl = 'https://mnygtmcwgkrkqluaqyfe.supabase.co';
 const supabaseKey = 'sb_publishable_Uj4W02FU_mmn4zA86JTukw_vbzRyMqR';
-const dbClient = window.supabase ? window.supabase.createClient(supabaseUrl, supabaseKey) : null;
+let dbClient = window.supabase ? window.supabase.createClient(supabaseUrl, supabaseKey) : null;
 
 // Elementos Globais
 const adminLoader = document.getElementById('admin-loader');
@@ -479,9 +479,16 @@ addSafeListener('btn-new-coupon', 'click', () => window.openCouponModal());
 
 // LOGIN
 addSafeListener('btn-login', 'click', checkManualLogin);
+
+// Suporte à tecla Enter nos campos de login
+const loginUserInp = document.getElementById('login-user');
+const loginPassInp = document.getElementById('login-pass');
+if (loginUserInp) loginUserInp.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkManualLogin(); });
+if (loginPassInp) loginPassInp.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkManualLogin(); });
+
 function checkManualLogin() {
-    const user = document.getElementById('login-user').value;
-    const pass = document.getElementById('login-pass').value;
+    const user = document.getElementById('login-user').value.trim();
+    const pass = document.getElementById('login-pass').value.trim();
     if (user === 'admin' && pass === 'viviane2024') {
         localStorage.setItem('hotdog_admin_logged', 'true');
         document.getElementById('login-overlay').style.display = 'none';
