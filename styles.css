@@ -437,6 +437,26 @@ body {
     display: flex;
     gap: 16px;
     justify-content: center;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+    .hero-title {
+        font-size: clamp(2.5rem, 12vw, 3.5rem) !important;
+        letter-spacing: -1px;
+    }
+    .hero-subtitle {
+        font-size: 1rem !important;
+        margin-bottom: 30px;
+    }
+    .hero-cta {
+        flex-direction: column;
+        width: 100%;
+    }
+    .hero-cta .btn-primary, .hero-cta .btn-secondary {
+        width: 100%;
+        padding: 14px;
+    }
 }
 
 
@@ -494,10 +514,9 @@ body {
    ========================================================================== */
 .category-nav {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 1rem;
-    padding: 1rem 2rem;
-    padding: 1rem 2rem;
+    padding: 1rem;
     position: sticky;
     top: 5px; /* grudado ao teto via sticky */
     z-index: 900;
@@ -615,8 +634,15 @@ body {
 /* Base de Grid para as Pizzas */
 .menu-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 1.2rem;
+}
+
+@media (max-width: 400px) {
+    .menu-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 0.8rem;
+    }
 }
 
 
