@@ -358,15 +358,22 @@ addSafeListener('btn-save-coupon', 'click', async () => {
         if (!code || isNaN(disc)) return alert("Preencha corretamente.");
         showLoader(true);
         const id = document.getElementById('coupon-id').value;
-        const payload = { code: code, discount_percentage: disc };
+        const payload = { 
+            code: code, 
+            discount_percentage: disc,
+            is_active: true 
+        };
         const { error } = id 
             ? await dbClient.from('coupons').update(payload).eq('id', id)
             : await dbClient.from('coupons').insert([payload]);
         if (error) throw error;
         document.getElementById('modal-coupon').classList.remove('active');
+        alert("Cupom salvo com sucesso!");
         fetchAllData();
     } catch (e) {
-        alert("Erro ao salvar cupom.");
+        console.error("Erro completo ao salvar cupom:", e);
+        const msg = e.message || "Verifique as permissões de RLS no Supabase.";
+        alert("Erro ao salvar cupom: " + msg);
         showLoader(false);
     }
 });
