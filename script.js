@@ -141,9 +141,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const checkoutBtn = document.getElementById('checkout-btn');
                 if (checkoutBtn) {
                     checkoutBtn.disabled = true;
+                    checkoutBtn.style.opacity = "0.5";
                     checkoutBtn.textContent = 'Fechado agora';
                 }
             }
+            
+            console.log(`[Store Status] ${estaAberto ? 'OPEN' : 'CLOSED'}`);
+            console.log(`[Debug] Day: ${todayKey}, Checkbox: ${todayConfig?.isOpen}, Now: ${agora.getHours()}:${agora.getMinutes()}, Range: ${todayConfig?.start}-${todayConfig?.end}`);
 
             // ATUALIZAR O TEXTO DO RODAPÉ BASEADO NOS SETTINGS
             updateFooterSchedule(settings.schedule);
@@ -492,6 +496,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 2. ABRIR DETALHES (Todo o Card ou Botão de Detalhe)
         const detailBtn = e.target.closest('.open-detail-btn');
         if (detailBtn) {
+            // Se estiver fechado, podemos ou bloquear ou apenas avisar. 
+            // Vamos apenas avisar, mas permitir ver o produto (read-only)
+            if (!estaAberto) {
+                showToast('Estamos fechados no momento. Você pode ver os itens, mas o pedido está bloqueado.');
+            }
             let id = detailBtn.dataset.id;
             let name = detailBtn.dataset.name;
             if (id) openProductDetailById(id);
@@ -734,6 +743,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             emptyCartMsg.style.display = 'block';
             cartItemsContainer.style.display = 'none';
             checkoutBtn.disabled = true;
+        }
+
+        // Bloqueio extra se a loja fechar com itens no carrinho
+        if (!estaAberto && checkoutBtn) {
+            checkoutBtn.disabled = true;
+            checkoutBtn.style.opacity = "0.5";
+            checkoutBtn.textContent = "Loja Fechada";
         }
 
         // Renderiza itens
