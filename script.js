@@ -104,6 +104,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return parseInt(parts[0]) * 60 + parseInt(parts[1]);
             }
 
+            const horaAtual = agora.getHours() * 60 + agora.getMinutes();
+            const abertura = timeToMinutes(todayConfig.start);
+            const fechamento = timeToMinutes(todayConfig.end);
+
             // Lógica de abertura baseada no horário e no status manual
             estaAberto = true; 
             if (settings.is_open === false) {
@@ -457,6 +461,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 1. Prioridade para ADICIONAR DIRETO (Botão Amarelo/Search)
         const addBtn = e.target.closest('.add-to-cart');
         if (addBtn) {
+            e.stopPropagation(); // Evita abrir o modal se clicar especificamente no botão
             if (!estaAberto) {
                 showToast('Estamos fechados no momento!');
                 return;
