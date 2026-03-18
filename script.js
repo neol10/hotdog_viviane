@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div class="card-content">
                             <h3 class="product-title">${prod.name}</h3>
                             <p class="product-desc">${prod.description || ''}</p>
-                            <button class="btn-mustard" style="width:100%; justify-content:center; padding: 12px;" ${disabledAttr}><i class="ph ph-plus"></i> Adicionar ao Carrinho</button>
+                            <button class="btn-mustard add-to-cart" data-name="${prod.name}" data-price="${prod.price}" style="width:100%; justify-content:center; padding: 12px;" ${disabledAttr}><i class="ph ph-plus"></i> Adicionar ao Carrinho</button>
                         </div>
                     </div>`;
                 });
@@ -454,15 +454,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Função de Adicionar Opcionais (Abrir Modal de Detalhes)
     document.addEventListener('click', (e) => {
-        const detailBtn = e.target.closest('.open-detail-btn');
-        if (detailBtn) {
-            let id = detailBtn.dataset.id;
-            let name = detailBtn.dataset.name;
-            if (id) openProductDetailById(id);
-            else if (name) openProductDetail(name);
-            return;
-        }
-
+        // 1. Prioridade para ADICIONAR DIRETO (Botão Amarelo/Search)
         const addBtn = e.target.closest('.add-to-cart');
         if (addBtn) {
             if (!estaAberto) {
@@ -485,10 +477,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             addBtn.classList.remove('clicked');
             void addBtn.offsetWidth;
             addBtn.classList.add('clicked');
-            flyToCart(addBtn);
+            if (typeof flyToCart === 'function') flyToCart(addBtn);
 
             updateCartUI();
             showToast(`${name} adicionado ao carrinho!`);
+            return; // Impede a abertura do modal de detalhes ao clicar no botão
+        }
+
+        // 2. ABRIR DETALHES (Todo o Card ou Botão de Detalhe)
+        const detailBtn = e.target.closest('.open-detail-btn');
+        if (detailBtn) {
+            let id = detailBtn.dataset.id;
+            let name = detailBtn.dataset.name;
+            if (id) openProductDetailById(id);
+            else if (name) openProductDetail(name);
+            return;
         }
     });
 
