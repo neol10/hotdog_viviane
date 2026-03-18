@@ -386,7 +386,9 @@ function renderOrders() {
     localOrders.forEach(o => {
         const item = document.createElement('div');
         item.className = 'admin-list-item';
-        item.innerHTML = `<div>Pedido #${o.id.substring(0,5)} - ${o.status}</div>`;
+        const numericHash = parseInt(o.id.replace(/-/g, '').substring(0, 8), 16).toString();
+        const shortId = numericHash.slice(-4).padStart(4, '0');
+        item.innerHTML = `<div>Pedido #${shortId} - ${o.status}</div>`;
         container.appendChild(item);
     });
 }

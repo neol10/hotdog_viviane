@@ -104,11 +104,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return parseInt(parts[0]) * 60 + parseInt(parts[1]);
             }
 
-            const horaAtual = agora.getHours() * 60 + agora.getMinutes();
-            const abertura = timeToMinutes(todayConfig.start);
-            const fechamento = timeToMinutes(todayConfig.end);
-
-            estaAberto = true; // FORCE OPEN (REI NEO V666)
+            // Lógica de abertura baseada no horário e no status manual
+            estaAberto = true; 
+            if (settings.is_open === false) {
+                estaAberto = false;
+            } else if (todayConfig && todayConfig.isOpen === false) {
+                estaAberto = false;
+            } else if (todayConfig) {
+                if (fechamento > abertura) {
+                    // Horário normal (ex: 19:00 - 23:00)
+                    estaAberto = (horaAtual >= abertura && horaAtual <= fechamento);
+                } else if (fechamento < abertura) {
+                    // Horário atravessa meia-noite (ex: 19:00 - 02:00)
+                    estaAberto = (horaAtual >= abertura || horaAtual <= fechamento);
+                }
+            }
 
             if (!estaAberto) {
                 const banner = document.createElement('div');
@@ -816,6 +826,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                     .eq('is_active', true)
                     .maybeSingle();
 
+                if (error) {
+                    console.error("Erro ao buscar cupom:", error);
+                    activeCoupon = null;
+                    msgCoupon.style.display = 'block';
+                    msgCoupon.style.color = 'var(--primary-red)';
+                    msgCoupon.textContent = 'Erro ao validar cupom. Tente novamente.';
+                    updateCartUI();
+                    return;
+                }
+
                 if (coupon) {
                     activeCoupon = coupon;
                     msgCoupon.style.display = 'block';
@@ -1225,10 +1245,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                         delivery_fee: deliveryFee
                     };
 
-                    const { data: insertedOrder } = await supabase.from('orders').insert([orderPayload]).select('id').single();
-                    if (insertedOrder) {
+                    const { data: insertedOrder, error: insertError } = await supabase.from('orders').insert([orderPayload]).select('id').single();
+                    
+                    if (insertError) {
+                        console.error("Erro Supabase Insert:", insertError);
+                        throw insertError;
+                    }
+
+                    if (insertedOrder && insertedOrder.id) {
                         const numericHash = parseInt(insertedOrder.id.replace(/-/g, '').substring(0, 8), 16).toString();
-                        orderShortId = numericHash.substring(numericHash.length - 4);
+                        orderShortId = numericHash.slice(-4).padStart(4, '0');
 
                         let actives = JSON.parse(localStorage.getItem('hotdogViviane_ActiveOrders')) || [];
                         if (!actives.includes(insertedOrder.id)) actives.push(insertedOrder.id);

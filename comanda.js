@@ -282,7 +282,7 @@ function renderCards(containerId, orders) {
         const totalItems = items.reduce((acc, i) => acc + (i.name.includes("Desconto") ? 0 : i.quantity), 0);
         // Gera um ID numérico falso de 4 a 5 digitos a partir do UUID para ser lido mais facilmente
         const numericHash = parseInt(order.id.replace(/-/g, '').substring(0, 8), 16).toString();
-        const shortId = numericHash.substring(numericHash.length - 4);
+        const shortId = numericHash.slice(-4).padStart(4, '0');
 
         let badgeClass = order.delivery_type === 'entrega' ? 'entrega' : 'retirada';
         let badgeLabel = order.delivery_type === 'entrega' ? 'Entrega' : 'Retirada';
@@ -355,7 +355,7 @@ function openKdsModal(orderId) {
     let customerInfo = {}; try { customerInfo = JSON.parse(order.customer_details); } catch (e) { }
 
     const numericHash = parseInt(order.id.replace(/-/g, '').substring(0, 8), 16).toString();
-    const shortId = numericHash.substring(numericHash.length - 4);
+    const shortId = numericHash.slice(-4).padStart(4, '0');
     document.getElementById('modal-order-id').textContent = `#${shortId}`;
     document.getElementById('modal-customer-name').textContent = customerInfo.name || 'Cliente Sem Nome';
 
