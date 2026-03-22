@@ -8,9 +8,6 @@ const corsHeaders = {
 
 type PushPayload = {
   orderId?: string;
-  shortId?: string;
-  customerName?: string;
-  deliveryType?: string;
 };
 
 Deno.serve(async (req) => {
@@ -39,10 +36,43 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    if (!body.orderId) {
+      return new Response(
+        JSON.stringify({ ok: false, error: "orderId é obrigatório." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 },
+      );
+    }
+
+    const { data: orderData, error: orderErr } = await supabase
+      .from("orders")
+      .select("id, created_at, delivery_type, customer_details")
+      .eq("id", body.orderId)
+      .maybeSingle();
+
+    if (orderErr) {
+      throw new Error(`Erro ao buscar pedido: ${orderErr.message}`);
+    }
+
+    if (!orderData || !orderData.id) {
+      return new Response(
+        JSON.stringify({ ok: false, error: "Pedido não encontrado." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 },
+      );
+    }
+
+    const orderCreatedAt = new Date(orderData.created_at).getTime();
+    if (!Number.isFinite(orderCreatedAt) || (Date.now() - orderCreatedAt) > 1000 * 60 * 30) {
+      return new Response(
+        JSON.stringify({ ok: false, error: "Pedido fora da janela de notificação." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 },
+      );
+    }
+
     const { data: subscriptions, error: subsError } = await supabase
       .from("push_subscriptions")
       .select("token")
       .eq("is_active", true)
+      .not("user_id", "is", null)
       .in("role", ["kds", "admin"]);
 
     if (subsError) {
@@ -64,9 +94,10 @@ Deno.serve(async (req) => {
     });
 
     const title = "Novo pedido na cozinha";
-    const safeShort = body.shortId || "0000";
-    const safeCustomer = body.customerName ? ` (${body.customerName})` : "";
-    const safeDelivery = body.deliveryType === "entrega" ? "Entrega" : "Retirada";
+    const safeShort = shortIdFromUuid(orderData.id);
+    const details = parseCustomerDetails(orderData.customer_details);
+    const safeCustomer = details.name ? ` (${details.name})` : "";
+    const safeDelivery = orderData.delivery_type === "entrega" ? "Entrega" : "Retirada";
     const messageBody = `Pedido #${safeShort}${safeCustomer} • ${safeDelivery}`;
 
     let sent = 0;
@@ -205,4 +236,30 @@ function toBase64Url(input: Uint8Array) {
     str += String.fromCharCode(input[i]);
   }
   return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function shortIdFromUuid(id: string) {
+  const hex = id.replace(/-/g, "").slice(0, 8);
+  const parsed = Number.parseInt(hex, 16);
+  if (Number.isNaN(parsed)) return "0000";
+  return parsed.toString().slice(-4).padStart(4, "0");
+}
+
+function parseCustomerDetails(input: unknown): { name: string } {
+  if (!input) return { name: "" };
+  if (typeof input === "object" && input !== null && "name" in input) {
+    const name = (input as { name?: unknown }).name;
+    return { name: typeof name === "string" ? name : "" };
+  }
+
+  if (typeof input === "string") {
+    try {
+      const parsed = JSON.parse(input) as { name?: unknown };
+      return { name: typeof parsed?.name === "string" ? parsed.name : "" };
+    } catch {
+      return { name: "" };
+    }
+  }
+
+  return { name: "" };
 }

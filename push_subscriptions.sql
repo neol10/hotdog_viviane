@@ -17,16 +17,17 @@ drop policy if exists push_subscriptions_select on public.push_subscriptions;
 create policy push_subscriptions_select
     on public.push_subscriptions
     for select
-    to anon, authenticated
-    using (true);
+    to authenticated
+    using (auth.uid() = user_id);
 
 drop policy if exists push_subscriptions_insert on public.push_subscriptions;
 create policy push_subscriptions_insert
     on public.push_subscriptions
     for insert
-    to anon, authenticated
+    to authenticated
     with check (
-        auth.role() in ('anon', 'authenticated')
+        auth.uid() = user_id
+        and role in ('kds', 'admin')
         and token is not null
         and length(token) > 20
     );
@@ -35,12 +36,13 @@ drop policy if exists push_subscriptions_update on public.push_subscriptions;
 create policy push_subscriptions_update
     on public.push_subscriptions
     for update
-    to anon, authenticated
+    to authenticated
     using (
-        auth.role() in ('anon', 'authenticated')
+        auth.uid() = user_id
     )
     with check (
-        auth.role() in ('anon', 'authenticated')
+        auth.uid() = user_id
+        and role in ('kds', 'admin')
         and token is not null
         and length(token) > 20
     );

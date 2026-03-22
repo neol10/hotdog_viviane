@@ -1249,7 +1249,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             let orderShortId = Date.now().toString().slice(-4).padStart(4, '0');
             if (supabase) {
                 try {
-                    const { data: customer } = await supabase.from('customers').select('id').eq('phone', clientPhone).maybeSingle();
+                    const { data: customerRows } = await supabase
+                        .from('customers')
+                        .select('id')
+                        .eq('phone', clientPhone)
+                        .order('created_at', { ascending: false })
+                        .limit(1);
+                    const customer = Array.isArray(customerRows) && customerRows.length > 0 ? customerRows[0] : null;
 
                     const payloadItems = cart.map(item => ({ ...item }));
                     if (activeCoupon) {
@@ -1285,35 +1291,46 @@ document.addEventListener('DOMContentLoaded', async () => {
                         insertError = retry.error;
                     }
 
-                    if (insertError || !insertedOrder || !insertedOrder.id) {
-                        console.error("Erro Supabase Insert:", insertError);
-                        throw insertError || new Error('Pedido não retornou ID no Supabase.');
+                    // Com RLS mais estrito, o insert pode funcionar mas o retorno com select('id') pode ser negado.
+                    // Nesse caso, tenta novamente sem retorno para não bloquear o checkout.
+                    if (insertError && ((insertError.status === 401 || insertError.status === 403) || ((insertError.message || '').toLowerCase().includes('permission')))) {
+                        const fallbackInsert = await supabase
+                            .from('orders')
+                            .insert([{ ...orderPayloadBase, delivery_fee: deliveryFee }]);
+                        if (!fallbackInsert.error) {
+                            insertError = null;
+                            insertedOrder = null;
+                        }
                     }
 
-                    const numericHash = parseInt(insertedOrder.id.replace(/-/g, '').substring(0, 8), 16).toString();
-                    orderShortId = numericHash.slice(-4).padStart(4, '0');
+                    if (insertError) {
+                        console.error("Erro Supabase Insert:", insertError);
+                        throw insertError;
+                    }
 
-                    let actives = JSON.parse(localStorage.getItem('hotdogViviane_ActiveOrders')) || [];
-                    if (!actives.includes(insertedOrder.id)) actives.push(insertedOrder.id);
-                    localStorage.setItem('hotdogViviane_ActiveOrders', JSON.stringify(actives));
+                    if (insertedOrder && insertedOrder.id) {
+                        const numericHash = parseInt(insertedOrder.id.replace(/-/g, '').substring(0, 8), 16).toString();
+                        orderShortId = numericHash.slice(-4).padStart(4, '0');
 
-                    // Dispara push para KDS/Admin sem bloquear o fluxo do cliente
-                    fetch(`${supabaseUrl}/functions/v1/send-order-push`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'apikey': supabaseKey,
-                            'Authorization': `Bearer ${supabaseKey}`
-                        },
-                        body: JSON.stringify({
-                            orderId: insertedOrder.id,
-                            shortId: orderShortId,
-                            customerName: profile.name || '',
-                            deliveryType: deliveryType
-                        })
-                    }).catch((pushErr) => {
-                        console.warn('Falha ao disparar push FCM:', pushErr);
-                    });
+                        let actives = JSON.parse(localStorage.getItem('hotdogViviane_ActiveOrders')) || [];
+                        if (!actives.includes(insertedOrder.id)) actives.push(insertedOrder.id);
+                        localStorage.setItem('hotdogViviane_ActiveOrders', JSON.stringify(actives));
+
+                        // Dispara push para KDS/Admin sem bloquear o fluxo do cliente
+                        fetch(`${supabaseUrl}/functions/v1/send-order-push`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'apikey': supabaseKey,
+                                'Authorization': `Bearer ${supabaseKey}`
+                            },
+                            body: JSON.stringify({
+                                orderId: insertedOrder.id
+                            })
+                        }).catch((pushErr) => {
+                            console.warn('Falha ao disparar push FCM:', pushErr);
+                        });
+                    }
 
                     if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
                         Notification.requestPermission();

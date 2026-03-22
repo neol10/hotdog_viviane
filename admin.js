@@ -16,6 +16,9 @@ let localCoupons = [];
 let globalSettings = null;
 let lastOrderCount = 0; 
 let isInitialLoad = true;
+let adminFirebaseMessaging = null;
+let adminFirebaseSwRegistration = null;
+let adminFcmToken = null;
 
 // Helper para evitar XSS
 function esc(t) {
@@ -45,7 +48,71 @@ function initAdmin() {
     if (dbClient) {
         initTabs();
         fetchAllData();
+        ensureAdminFcmSubscription().catch((e) => console.warn('FCM admin não inicializado:', e));
     }
+}
+
+async function initAdminFirebaseMessaging() {
+    if (adminFirebaseMessaging) return adminFirebaseMessaging;
+    if (!window.firebase || !window.firebaseWebConfig || !('serviceWorker' in navigator)) return null;
+
+    if (!window.firebase.apps.length) {
+        window.firebase.initializeApp(window.firebaseWebConfig);
+    }
+
+    adminFirebaseMessaging = window.firebase.messaging();
+    adminFirebaseSwRegistration = await navigator.serviceWorker.register('./firebase-messaging-sw.js', {
+        scope: './firebase-push/'
+    });
+
+    return adminFirebaseMessaging;
+}
+
+async function saveAdminFcmToken(token) {
+    if (!dbClient || !token) return;
+
+    const { data: { session } } = await dbClient.auth.getSession();
+    if (!session || !session.user) return;
+
+    const payload = {
+        token: token,
+        user_id: session.user.id,
+        role: 'admin',
+        user_agent: navigator.userAgent,
+        is_active: true,
+        updated_at: new Date().toISOString()
+    };
+
+    const { error } = await dbClient.from('push_subscriptions').upsert(payload, { onConflict: 'token' });
+    if (error) {
+        console.warn('Não foi possível salvar token FCM admin:', error.message);
+    }
+}
+
+async function ensureAdminFcmSubscription() {
+    if (!('Notification' in window)) return;
+    const { data: { session } } = await dbClient.auth.getSession();
+    if (!session || !session.user) return;
+
+    let permission = Notification.permission;
+    if (permission === 'default') {
+        permission = await Notification.requestPermission();
+    }
+    if (permission !== 'granted') return;
+
+    const messaging = await initAdminFirebaseMessaging();
+    if (!messaging || !window.firebasePublicVapidKey) return;
+
+    const token = await messaging.getToken({
+        vapidKey: window.firebasePublicVapidKey,
+        serviceWorkerRegistration: adminFirebaseSwRegistration
+    });
+
+    if (!token || token === adminFcmToken) return;
+
+    adminFcmToken = token;
+    localStorage.setItem('hotdog_fcm_token_admin', token);
+    await saveAdminFcmToken(token);
 }
 
 // 1. SISTEMA DE ABAS
@@ -527,22 +594,32 @@ const loginPassInp = document.getElementById('login-pass');
 if (loginUserInp) loginUserInp.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkManualLogin(); });
 if (loginPassInp) loginPassInp.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkManualLogin(); });
 
-function checkManualLogin() {
+async function checkManualLogin() {
     const user = document.getElementById('login-user').value.trim();
     const pass = document.getElementById('login-pass').value.trim();
-    console.log("Tentativa de login:", user.toLowerCase(), "Senha (tamanho):", pass.length);
-    if (user.toLowerCase() === 'adminhotdogviviane@gmail.com' && (pass === 'Admin166480' || pass === 'Admin166480*-')) {
+
+    try {
+        const { error } = await dbClient.auth.signInWithPassword({ email: user, password: pass });
+        if (error) throw error;
+
         localStorage.setItem('hotdog_admin_logged', 'true');
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('admin-wrapper').style.display = 'block';
         initAdmin();
-    } else {
+    } catch (e) {
+        console.warn('Falha no login admin:', e);
         document.getElementById('login-error').style.display = 'block';
     }
 }
 
-function checkLogin() {
+async function checkLogin() {
     if (localStorage.getItem('hotdog_admin_logged') === 'true') {
+        const { data: { session } } = await dbClient.auth.getSession();
+        if (!session) {
+            localStorage.removeItem('hotdog_admin_logged');
+            return;
+        }
+
         const overlay = document.getElementById('login-overlay');
         if (overlay) overlay.style.display = 'none';
         const wrapper = document.getElementById('admin-wrapper');
@@ -551,7 +628,12 @@ function checkLogin() {
     }
 }
 
-addSafeListener('btn-logout', 'click', () => {
+addSafeListener('btn-logout', 'click', async () => {
+    const savedToken = localStorage.getItem('hotdog_fcm_token_admin');
+    if (savedToken) {
+        await dbClient.from('push_subscriptions').update({ is_active: false }).eq('token', savedToken);
+    }
+    await dbClient.auth.signOut();
     localStorage.removeItem('hotdog_admin_logged');
     location.reload();
 });

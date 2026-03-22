@@ -104,11 +104,17 @@ async function saveFcmToken(token) {
     if (!dbClient || !token) return;
 
     const { data: { session } } = await dbClient.auth.getSession();
+    if (!session || !session.user) {
+        console.warn('Sessão ausente: token FCM não será salvo.');
+        return;
+    }
+
     const payload = {
         token: token,
-        user_id: session && session.user ? session.user.id : null,
+        user_id: session.user.id,
         role: 'kds',
         user_agent: navigator.userAgent,
+        is_active: true,
         updated_at: new Date().toISOString()
     };
 
@@ -120,6 +126,9 @@ async function saveFcmToken(token) {
 
 async function ensureFcmSubscription() {
     if (!('Notification' in window)) return;
+
+    const { data: { session } } = await dbClient.auth.getSession();
+    if (!session || !session.user) return;
 
     let permission = Notification.permission;
     if (permission === 'default') {
@@ -155,12 +164,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // AUTENTICAÇÃO
 async function checkSession() {
-    // Se o usuário já logou no painel admin pelo mesmo navegador, também entra direto na comanda
-    if (localStorage.getItem('hotdog_admin_logged') === 'true') {
-        showKdsDashboard();
-        return;
-    }
-
     const { data: { session } } = await dbClient.auth.getSession();
     if (session) {
         showKdsDashboard();
@@ -213,6 +216,11 @@ loginForm.addEventListener('submit', async (e) => {
 });
 
 btnLogout.addEventListener('click', async () => {
+    const savedToken = localStorage.getItem('hotdog_fcm_token_kds');
+    if (savedToken) {
+        await dbClient.from('push_subscriptions').update({ is_active: false }).eq('token', savedToken);
+    }
+
     await dbClient.auth.signOut();
     localStorage.removeItem('hotdog_admin_logged');
     if (realtimeSubscription) dbClient.removeChannel(realtimeSubscription);
