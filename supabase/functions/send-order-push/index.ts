@@ -8,6 +8,10 @@ const corsHeaders = {
 
 type PushPayload = {
   orderId?: string;
+  customerId?: string | null;
+  totalPrice?: number;
+  deliveryType?: string;
+  createdAtIso?: string;
 };
 
 Deno.serve(async (req) => {
@@ -36,18 +40,48 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    if (!body.orderId) {
-      return new Response(
-        JSON.stringify({ ok: false, error: "orderId é obrigatório." }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 },
-      );
-    }
+    let orderData: {
+      id: string;
+      created_at: string;
+      delivery_type: string;
+      customer_details: unknown;
+    } | null = null;
 
-    const { data: orderData, error: orderErr } = await supabase
-      .from("orders")
-      .select("id, created_at, delivery_type, customer_details")
-      .eq("id", body.orderId)
-      .maybeSingle();
+    let orderErr: { message?: string } | null = null;
+
+    if (body.orderId) {
+      const byId = await supabase
+        .from("orders")
+        .select("id, created_at, delivery_type, customer_details")
+        .eq("id", body.orderId)
+        .maybeSingle();
+      orderData = byId.data;
+      orderErr = byId.error;
+    } else {
+      const createdAt = body.createdAtIso ? new Date(body.createdAtIso) : new Date();
+      const fromDate = new Date(createdAt.getTime() - 1000 * 60 * 5).toISOString();
+
+      let q = supabase
+        .from("orders")
+        .select("id, created_at, delivery_type, customer_details, total_price, customer_id")
+        .gte("created_at", fromDate)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (body.customerId) {
+        q = q.eq("customer_id", body.customerId);
+      }
+      if (typeof body.totalPrice === "number") {
+        q = q.eq("total_price", body.totalPrice);
+      }
+      if (body.deliveryType) {
+        q = q.eq("delivery_type", body.deliveryType);
+      }
+
+      const fallback = await q.maybeSingle();
+      orderData = fallback.data;
+      orderErr = fallback.error;
+    }
 
     if (orderErr) {
       throw new Error(`Erro ao buscar pedido: ${orderErr.message}`);

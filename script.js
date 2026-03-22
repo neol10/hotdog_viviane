@@ -1292,8 +1292,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                         throw insertError;
                     }
 
-                    // Se futuramente tivermos um endpoint de criação que retorne o ID com segurança,
-                    // reativamos o push imediato aqui. Por enquanto, evita erro de RLS no checkout.
+                    // Dispara push mesmo quando o banco não retorna orderId por causa de RLS.
+                    fetch(`${supabaseUrl}/functions/v1/send-order-push`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'apikey': supabaseKey,
+                            'Authorization': `Bearer ${supabaseKey}`
+                        },
+                        body: JSON.stringify({
+                            orderId: insertedOrder && insertedOrder.id ? insertedOrder.id : null,
+                            customerId: customer ? customer.id : null,
+                            totalPrice: totalPedido,
+                            deliveryType: deliveryType,
+                            createdAtIso: new Date().toISOString()
+                        })
+                    }).catch((pushErr) => {
+                        console.warn('Falha ao disparar push FCM:', pushErr);
+                    });
 
                     if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
                         Notification.requestPermission();

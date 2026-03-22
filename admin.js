@@ -613,18 +613,16 @@ async function checkManualLogin() {
 }
 
 async function checkLogin() {
-    if (localStorage.getItem('hotdog_admin_logged') === 'true') {
-        const { data: { session } } = await dbClient.auth.getSession();
-        if (!session) {
-            localStorage.removeItem('hotdog_admin_logged');
-            return;
-        }
-
+    const { data: { session } } = await dbClient.auth.getSession();
+    if (session) {
+        localStorage.setItem('hotdog_admin_logged', 'true');
         const overlay = document.getElementById('login-overlay');
         if (overlay) overlay.style.display = 'none';
         const wrapper = document.getElementById('admin-wrapper');
         if (wrapper) wrapper.style.display = 'block';
         initAdmin();
+    } else {
+        localStorage.removeItem('hotdog_admin_logged');
     }
 }
 
