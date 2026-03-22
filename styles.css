@@ -1134,13 +1134,6 @@ body {
         grid-template-columns: repeat(2, 1fr);
     }
 
-    /* Forca 1 coluna so a partir de 480px */
-    @media (max-width: 480px) {
-        .menu-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-
     /* List items */
     .list-item {
         flex-direction: column;
@@ -1214,6 +1207,12 @@ body {
     /* Banner */
     .closed-banner-inner {
         font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .menu-grid {
+        grid-template-columns: 1fr;
     }
 }
 

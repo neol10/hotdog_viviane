@@ -30,6 +30,9 @@ let lastOrderCount = 0; // Para redundância de som
 let isInitialLoad = true;
 let realtimeSubscription = null;
 let realtimeHeartbeat = null;
+let firebaseMessaging = null;
+let firebaseSwRegistration = null;
+let currentFcmToken = null;
 
 // ============================================
 // FUNÇÕES AUXILIARES
@@ -62,6 +65,82 @@ function escapeHtml(text) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+async function initFirebaseMessaging() {
+    if (firebaseMessaging) return firebaseMessaging;
+    if (!window.firebase || !window.firebaseWebConfig || !('serviceWorker' in navigator)) return null;
+
+    if (!window.firebase.apps.length) {
+        window.firebase.initializeApp(window.firebaseWebConfig);
+    }
+
+    firebaseMessaging = window.firebase.messaging();
+
+    firebaseSwRegistration = await navigator.serviceWorker.register('./firebase-messaging-sw.js', {
+        scope: './firebase-push/'
+    });
+
+    firebaseMessaging.onMessage((payload) => {
+        try {
+            const notif = payload && payload.notification ? payload.notification : {};
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(notif.title || 'Novo pedido', {
+                    body: notif.body || 'Chegou um novo pedido na comanda.',
+                    icon: 'img/logo_hotdog_viviane.png'
+                });
+            }
+            playNotification();
+            fetchActiveOrders();
+        } catch (e) {
+            console.warn('Falha ao tratar notificação foreground do Firebase:', e);
+        }
+    });
+
+    return firebaseMessaging;
+}
+
+async function saveFcmToken(token) {
+    if (!dbClient || !token) return;
+
+    const { data: { session } } = await dbClient.auth.getSession();
+    const payload = {
+        token: token,
+        user_id: session && session.user ? session.user.id : null,
+        role: 'kds',
+        user_agent: navigator.userAgent,
+        updated_at: new Date().toISOString()
+    };
+
+    const { error } = await dbClient.from('push_subscriptions').upsert(payload, { onConflict: 'token' });
+    if (error) {
+        console.warn('Não foi possível salvar token FCM no Supabase:', error.message);
+    }
+}
+
+async function ensureFcmSubscription() {
+    if (!('Notification' in window)) return;
+
+    let permission = Notification.permission;
+    if (permission === 'default') {
+        permission = await Notification.requestPermission();
+    }
+
+    if (permission !== 'granted') return;
+
+    const messaging = await initFirebaseMessaging();
+    if (!messaging || !window.firebasePublicVapidKey) return;
+
+    const token = await messaging.getToken({
+        vapidKey: window.firebasePublicVapidKey,
+        serviceWorkerRegistration: firebaseSwRegistration
+    });
+
+    if (!token || token === currentFcmToken) return;
+
+    currentFcmToken = token;
+    localStorage.setItem('hotdog_fcm_token_kds', token);
+    await saveFcmToken(token);
 }
 
 // INICIALIZAÇÃO
@@ -106,6 +185,9 @@ function showKdsDashboard() {
 
     fetchActiveOrders();
     subscribeToRealtime();
+    initFirebaseMessaging().then(() => ensureFcmSubscription()).catch((e) => {
+        console.warn('FCM não inicializado na comanda:', e);
+    });
 
     setInterval(updateTimeCounters, 60000); // Atualiza os tempos "Há X min" a cada 1 minuto
 }
@@ -158,14 +240,11 @@ btnSound.addEventListener('click', async () => {
         }
     }
 
-    // 2. Reforça OneSignal se disponível
-    if (window.OneSignalDeferred) {
-        OneSignalDeferred.push(async function (OneSignal) {
-            const isPushSupported = OneSignal.Notifications.isPushSupported();
-            if (isPushSupported) {
-                await OneSignal.Notifications.requestPermission();
-            }
-        });
+    // 2. Registra token FCM para push em background
+    try {
+        await ensureFcmSubscription();
+    } catch (e) {
+        console.warn('Não foi possível ativar FCM:', e);
     }
 
     // 3. Toggle do som (função original)

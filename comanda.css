@@ -608,6 +608,17 @@ body.kds-flash {
         height: 30px;
     }
 
+    .kds-controls {
+        width: 100%;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .realtime-status {
+        margin-right: 0;
+    }
+
     /* Ocultar label "Ao Vivo" em mobile */
     .realtime-status span:not(.pulse-dot) {
         display: none;
@@ -643,6 +654,15 @@ body.kds-flash {
         scroll-snap-align: start;
     }
 
+    .kds-compact-footer {
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .kds-action-hint {
+        flex-wrap: wrap;
+    }
+
     /* Cards do KDS: padding menor */
     .kds-card {
         padding: 14px;
@@ -667,5 +687,15 @@ body.kds-flash {
 
     .lane-header h2 {
         font-size: 0.95rem;
+    }
+
+    .kds-compact-body {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .kds-compact-client {
+        max-width: 100%;
     }
 }

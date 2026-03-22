@@ -24,16 +24,9 @@
 
     <!-- Supabase Client (CDN) -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <!-- OneSignal Web Push SDK -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    <script>
-        window.OneSignalDeferred = window.OneSignalDeferred || [];
-        OneSignalDeferred.push(async function (OneSignal) {
-            await OneSignal.init({
-                appId: "700c926f-2949-4753-8e3a-12ddbcb370e3",
-            });
-        });
-    </script>
+    <!-- Firebase (base para migração de notificações) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="firebase-config.js"></script>
 </head>
 
 <body>

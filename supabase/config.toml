@@ -1,0 +1,4 @@
+project_id = "hotdogviviane"
+
+[functions.send-order-push]
+verify_jwt = false

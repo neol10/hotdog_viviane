@@ -305,5 +305,26 @@ select.profile-input option {
     .admin-product-actions {
         width: 100%;
         justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .admin-navbar .nav-container > div {
+        width: 100%;
+        justify-content: flex-start !important;
+        flex-wrap: wrap;
+    }
+
+    .schedule-row {
+        flex-wrap: wrap;
+        align-items: flex-start !important;
+    }
+
+    .schedule-row label {
+        width: 100% !important;
+    }
+
+    .schedule-row input[type="time"] {
+        flex: 1 1 140px;
+        min-width: 120px;
     }
 }

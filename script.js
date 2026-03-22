@@ -1297,6 +1297,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (!actives.includes(insertedOrder.id)) actives.push(insertedOrder.id);
                     localStorage.setItem('hotdogViviane_ActiveOrders', JSON.stringify(actives));
 
+                    // Dispara push para KDS/Admin sem bloquear o fluxo do cliente
+                    fetch(`${supabaseUrl}/functions/v1/send-order-push`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'apikey': supabaseKey,
+                            'Authorization': `Bearer ${supabaseKey}`
+                        },
+                        body: JSON.stringify({
+                            orderId: insertedOrder.id,
+                            shortId: orderShortId,
+                            customerName: profile.name || '',
+                            deliveryType: deliveryType
+                        })
+                    }).catch((pushErr) => {
+                        console.warn('Falha ao disparar push FCM:', pushErr);
+                    });
+
                     if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
                         Notification.requestPermission();
                     }
