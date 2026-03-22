@@ -457,23 +457,28 @@ addSafeListener('btn-save-schedule', 'click', async () => {
     try {
         showLoader(true);
         const daysOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-        const daysTranslation = {
-            'monday': 'Segunda-feira', 'tuesday': 'Terça-feira', 'wednesday': 'Quarta-feira',
-            'thursday': 'Quinta-feira', 'friday': 'Sexta-feira', 'saturday': 'Sábado', 'sunday': 'Domingo'
-        };
         const newSchedule = {};
         daysOrder.forEach(key => {
             newSchedule[key] = {
-                name: daysTranslation[key],
                 isOpen: document.getElementById(`check-${key}`).checked,
                 start: document.getElementById(`start-${key}`).value,
                 end: document.getElementById(`end-${key}`).value
             };
         });
-        await dbClient.from('settings').update({ schedule: newSchedule }).eq('id', 1);
-        alert("Horários salvos!");
-        fetchAllData();
-    } catch (e) { alert("Erro ao salvar horários."); showLoader(false); }
+        const { error } = await dbClient.from('settings').update({ schedule: newSchedule }).eq('id', 1);
+        if (error) {
+            console.error('Erro ao salvar horários:', error);
+            alert("Erro ao salvar horários: " + error.message);
+            showLoader(false);
+        } else {
+            alert("Horários salvos com sucesso!");
+            fetchAllData();
+        }
+    } catch (e) { 
+        console.error('Exceção ao salvar horários:', e);
+        alert("Erro ao salvar horários: " + e.message); 
+        showLoader(false); 
+    }
 });
 
 addSafeListener('btn-save-delivery-fee', 'click', async () => {

@@ -31,6 +31,32 @@ let isInitialLoad = true;
 let realtimeSubscription = null;
 let realtimeHeartbeat = null;
 
+// ============================================
+// FUNÇÕES AUXILIARES
+// ============================================
+
+// Função auxiliar para fazer parse seguro de items JSON
+function safeParseItems(itemsStr) {
+    try {
+        const parsed = JSON.parse(itemsStr);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+        console.warn('Erro ao fazer parse de items:', itemsStr, e);
+        return [];
+    }
+}
+
+// Função auxiliar para escapar caracteres especiais e evitar XSS
+function escapeHtml(text) {
+    if (!text) return "";
+    return text.toString()
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 // INICIALIZAÇÃO
 document.addEventListener('DOMContentLoaded', () => {
     if (window.supabase) {
@@ -273,13 +299,12 @@ function renderCards(containerId, orders) {
         const timeText = diffMinutes > 0 ? `Há ${diffMinutes} min` : 'Agora';
         const isLate = diffMinutes > 30;
 
-        let items = [];
-        try { items = JSON.parse(order.items); } catch (e) { }
+        const items = safeParseItems(order.items);
 
         let customerInfo = {};
         try { customerInfo = JSON.parse(order.customer_details); } catch (e) { }
 
-        const totalItems = items.reduce((acc, i) => acc + (i.name.includes("Desconto") ? 0 : i.quantity), 0);
+        const totalItems = items.reduce((acc, i) => acc + (i && i.name && i.name.includes("Desconto") ? 0 : (i && i.quantity ? i.quantity : 0)), 0);
         // Gera um ID numérico falso de 4 a 5 digitos a partir do UUID para ser lido mais facilmente
         const numericHash = parseInt(order.id.replace(/-/g, '').substring(0, 8), 16).toString();
         const shortId = numericHash.slice(-4).padStart(4, '0');
@@ -351,8 +376,9 @@ function openKdsModal(orderId) {
     const order = kdsOrders.find(o => o.id.toString() === orderId.toString());
     if (!order) return;
 
-    let items = []; try { items = JSON.parse(order.items); } catch (e) { }
-    let customerInfo = {}; try { customerInfo = JSON.parse(order.customer_details); } catch (e) { }
+    const items = safeParseItems(order.items);
+    let customerInfo = {}; 
+    try { customerInfo = JSON.parse(order.customer_details); } catch (e) { }
 
     const numericHash = parseInt(order.id.replace(/-/g, '').substring(0, 8), 16).toString();
     const shortId = numericHash.slice(-4).padStart(4, '0');
@@ -362,7 +388,7 @@ function openKdsModal(orderId) {
     // Configura o Endereço ou Mostra Retirada
     const addressContainer = document.getElementById('modal-order-address');
     if (order.delivery_type === 'entrega') {
-        const addrText = customerInfo.address || 'Endereço não informado';
+        const addrText = escapeHtml(customerInfo.address || 'Endereço não informado');
         addressContainer.innerHTML = `<strong>📍 Endereço de Entrega:</strong><br><span style="white-space: pre-wrap;">${addrText}</span>`;
         addressContainer.style.display = 'block';
         document.getElementById('modal-order-badge').innerHTML = `<div class="kds-delivery-badge entrega" style="margin: 0;"><i class="ph-fill ph-motorcycle"></i> ENTREGA</div>`;
@@ -373,9 +399,21 @@ function openKdsModal(orderId) {
 
     // Lista de Itens
     const itemsContainer = document.getElementById('modal-order-items');
-    itemsContainer.innerHTML = (Array.isArray(items) ? items : []).filter(i => i && i.name && !i.name.includes("Desconto")).map(i => `
-        <li><span class="qty">${i.quantity}</span> ${i.name}</li>
-    `).join('');
+    if (!Array.isArray(items) || items.length === 0) {
+        console.warn('Items não é um array válido ou está vazio:', items);
+        itemsContainer.innerHTML = '<li>Nenhum item encontrado</li>';
+    } else {
+        itemsContainer.innerHTML = items
+            .filter(i => i && i.name && !i.name.includes("Desconto"))
+            .map(i => {
+                const escapedName = escapeHtml(i.name || '');
+                return `<li><span class="qty">${i.quantity}</span> ${escapedName}</li>`;
+            })
+            .join('');
+        if (itemsContainer.innerHTML === '') {
+            itemsContainer.innerHTML = '<li>Nenhum item neste pedido</li>';
+        }
+    }
 
     // Botões
     const actionsContainer = document.getElementById('modal-order-actions');
