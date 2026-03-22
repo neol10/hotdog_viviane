@@ -36,14 +36,21 @@ let realtimeHeartbeat = null;
 // ============================================
 
 // Função auxiliar para fazer parse seguro de items JSON
-function safeParseItems(itemsStr) {
-    try {
-        const parsed = JSON.parse(itemsStr);
-        return Array.isArray(parsed) ? parsed : [];
-    } catch (e) {
-        console.warn('Erro ao fazer parse de items:', itemsStr, e);
-        return [];
+function safeParseItems(itemsRaw) {
+    if (Array.isArray(itemsRaw)) return itemsRaw;
+    if (!itemsRaw) return [];
+
+    if (typeof itemsRaw === 'string') {
+        try {
+            const parsed = JSON.parse(itemsRaw);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+            console.warn('Erro ao fazer parse de items:', itemsRaw, e);
+            return [];
+        }
     }
+
+    return [];
 }
 
 // Função auxiliar para escapar caracteres especiais e evitar XSS

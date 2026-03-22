@@ -1246,7 +1246,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             // 1. SYNC SUPABASE (REI NEO DASHBOARD E KDS)
-            let orderShortId = '0000';
+            let orderShortId = Date.now().toString().slice(-4).padStart(4, '0');
             if (supabase) {
                 try {
                     const { data: customer } = await supabase.from('customers').select('id').eq('phone', clientPhone).maybeSingle();
@@ -1259,38 +1259,52 @@ document.addEventListener('DOMContentLoaded', async () => {
                         payloadItems.push({ name: `Taxa de Entrega`, price: deliveryFee, quantity: 1 });
                     }
 
-                    const orderPayload = {
+                    const orderPayloadBase = {
                         customer_id: customer ? customer.id : null,
                         total_price: totalPedido,
                         items: JSON.stringify(payloadItems),
                         customer_details: JSON.stringify({ ...profile, phone: clientPhone }),
                         status: 'pendente',
-                        delivery_type: deliveryType,
-                        delivery_fee: deliveryFee
+                        delivery_type: deliveryType
                     };
 
-                    const { data: insertedOrder, error: insertError } = await supabase.from('orders').insert([orderPayload]).select('id').single();
-                    
-                    if (insertError) {
+                    let { data: insertedOrder, error: insertError } = await supabase
+                        .from('orders')
+                        .insert([{ ...orderPayloadBase, delivery_fee: deliveryFee }])
+                        .select('id')
+                        .single();
+
+                    // Compatibilidade com bancos antigos sem a coluna delivery_fee
+                    if (insertError && (insertError.message || '').toLowerCase().includes('delivery_fee')) {
+                        const retry = await supabase
+                            .from('orders')
+                            .insert([orderPayloadBase])
+                            .select('id')
+                            .single();
+                        insertedOrder = retry.data;
+                        insertError = retry.error;
+                    }
+
+                    if (insertError || !insertedOrder || !insertedOrder.id) {
                         console.error("Erro Supabase Insert:", insertError);
-                        throw insertError;
+                        throw insertError || new Error('Pedido não retornou ID no Supabase.');
                     }
 
-                    if (insertedOrder && insertedOrder.id) {
-                        const numericHash = parseInt(insertedOrder.id.replace(/-/g, '').substring(0, 8), 16).toString();
-                        orderShortId = numericHash.slice(-4).padStart(4, '0');
+                    const numericHash = parseInt(insertedOrder.id.replace(/-/g, '').substring(0, 8), 16).toString();
+                    orderShortId = numericHash.slice(-4).padStart(4, '0');
 
-                        let actives = JSON.parse(localStorage.getItem('hotdogViviane_ActiveOrders')) || [];
-                        if (!actives.includes(insertedOrder.id)) actives.push(insertedOrder.id);
-                        localStorage.setItem('hotdogViviane_ActiveOrders', JSON.stringify(actives));
+                    let actives = JSON.parse(localStorage.getItem('hotdogViviane_ActiveOrders')) || [];
+                    if (!actives.includes(insertedOrder.id)) actives.push(insertedOrder.id);
+                    localStorage.setItem('hotdogViviane_ActiveOrders', JSON.stringify(actives));
 
-                        if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
-                            Notification.requestPermission();
-                        }
-                        if (typeof window.initClientRealtime === 'function') window.initClientRealtime();
+                    if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+                        Notification.requestPermission();
                     }
+                    if (typeof window.initClientRealtime === 'function') window.initClientRealtime();
                 } catch (e) {
-                    console.warn("Falha ao registrar pedido no Dashboard.");
+                    console.error("Falha ao registrar pedido no Dashboard:", e);
+                    alert("Não foi possível registrar o pedido na comanda. Tente novamente em alguns segundos.");
+                    return;
                 }
             }
 
