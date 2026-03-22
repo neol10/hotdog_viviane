@@ -10,3 +10,9 @@ Thumbs.db
 # Locais (não commitar)
 *.log
 .env
+*.json
+chave pvd/
+supabase/.temp/
+test-push.js
+test-push-alt.js
+package-lock.json

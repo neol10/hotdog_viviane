@@ -2206,3 +2206,43 @@ body.light-mode .category-link.active {
         transform: scale(1);
     }
 }
+
+/* Notificação Push FAB */
+.notif-fab {
+    position: fixed;
+    bottom: 85px; /* Acima da barra de navegação se houver */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    animation: slideUp 0.5s ease;
+}
+
+.fab-btn {
+    background: var(--primary-red);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.fab-btn:hover {
+    transform: scale(1.05);
+    background: #dc2626;
+}
+
+.fab-btn i {
+    font-size: 1.2rem;
+}
+
+@keyframes slideUp {
+    from { bottom: -50px; opacity: 0; }
+    to { bottom: 85px; opacity: 1; }
+}

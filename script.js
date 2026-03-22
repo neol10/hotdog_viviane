@@ -1314,6 +1314,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
                         Notification.requestPermission();
                     }
+                    if (typeof window.ensureCustomerFcmSubscription === 'function') {
+                        window.ensureCustomerFcmSubscription();
+                    }
                     if (typeof window.initClientRealtime === 'function') window.initClientRealtime();
                 } catch (e) {
                     console.error("Falha ao registrar pedido no Dashboard:", e);
@@ -1551,3 +1554,74 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 });
 
+
+// ==========================================
+// 8. FIREBASE PUSH (CLIENTE)
+// ==========================================
+let clientFcmToken = null;
+
+window.ensureCustomerFcmSubscription = async function() {
+    if (!('Notification' in window) || !window.firebase || !('serviceWorker' in navigator)) return;
+
+    if (Notification.permission === 'default') {
+        await Notification.requestPermission();
+    }
+    if (Notification.permission !== 'granted') return;
+
+    try {
+        if (!window.firebase.apps.length) {
+            window.firebase.initializeApp(window.firebaseWebConfig);
+        }
+        const messaging = window.firebase.messaging();
+        
+        // Usa o sw.js principal que agora tem o Firebase integrado
+        const reg = await navigator.serviceWorker.register('./sw.js');
+        
+        const token = await messaging.getToken({
+            vapidKey: window.firebasePublicVapidKey,
+            serviceWorkerRegistration: reg
+        });
+
+        if (token && token !== clientFcmToken) {
+            clientFcmToken = token;
+            // Salva no Supabase como role 'customer' para o administrador saber
+            const payload = {
+                token: token,
+                role: 'customer',
+                user_agent: navigator.userAgent,
+                is_active: true,
+                updated_at: new Date().toISOString()
+            };
+            
+            // Tenta salvar (exige que a RLS permita anon insert em push_subscriptions)
+            await supabase.from('push_subscriptions').upsert(payload, { onConflict: 'token' });
+            console.log("Token FCM Cliente registrado.");
+        }
+    } catch (e) {
+        console.warn("Erro ao registrar FCM do cliente:", e);
+    }
+};
+
+window.enableNotificationsUI = async function() {
+    const btn = document.getElementById('notif-fab');
+    if (btn) btn.style.display = 'none';
+    await window.ensureCustomerFcmSubscription();
+};
+
+function checkNotificationStatus() {
+    const btn = document.getElementById('notif-fab');
+    if (!btn) return;
+
+    if ("Notification" in window) {
+        if (Notification.permission === 'default') {
+            btn.style.display = 'block';
+        } else {
+            btn.style.display = 'none';
+        }
+    }
+}
+
+// Inicializa checagem de notificações
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(checkNotificationStatus, 2000);
+});

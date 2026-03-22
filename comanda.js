@@ -77,9 +77,7 @@ async function initFirebaseMessaging() {
 
     firebaseMessaging = window.firebase.messaging();
 
-    firebaseSwRegistration = await navigator.serviceWorker.register('./firebase-messaging-sw.js', {
-        scope: './firebase-push/'
-    });
+    firebaseSwRegistration = await navigator.serviceWorker.register('./sw.js');
 
     firebaseMessaging.onMessage((payload) => {
         try {
@@ -601,6 +599,23 @@ window.changeOrderStatus = async function (orderId, newStatus) {
             }
             renderLanes();
             alert("Erro ao atualizar o pedido no servidor.");
+        } else {
+            // Notificar o cliente via Push se for um status de interesse (preparando, pronto)
+            if (['preparando', 'pronto'].includes(newStatus)) {
+                fetch(`${supabaseUrl}/functions/v1/send-order-push`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': supabaseKey,
+                        'Authorization': `Bearer ${supabaseKey}`
+                    },
+                    body: JSON.stringify({
+                        type: 'status_update',
+                        orderId: orderId,
+                        newStatus: newStatus
+                    })
+                }).catch(err => console.warn("Erro ao notificar cliente via push:", err));
+            }
         }
     }
 }

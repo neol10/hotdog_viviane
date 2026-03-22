@@ -9,6 +9,17 @@
     <link rel="stylesheet" href="comanda.css">
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function (regs) {
+                regs.forEach(function (reg) {
+                    if (reg.active && (reg.active.scriptURL.includes('OneSignal') || reg.active.scriptURL.includes('OneSignalSDKWorker'))) {
+                        reg.unregister();
+                    }
+                });
+            });
+        }
+    </script>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="img/logo_hotdog_viviane.png">
     <link rel="icon" href="img/logo_hotdog_viviane.png" type="image/png">
@@ -72,6 +83,9 @@
                 <button id="btn-fullscreen" class="btn-icon tooltip" title="Tela Cheia">
                     <i class="ph ph-corners-out"></i>
                 </button>
+                <a href="/admin.html" class="btn-secondary" style="font-size: 0.85rem; padding: 8px 16px; text-decoration: none; display: flex; align-items: center; gap: 5px;">
+                    <i class="ph ph-gear"></i> Admin
+                </a>
                 <button id="btn-logout" class="btn-secondary"><i class="ph ph-sign-out"></i> Sair</button>
             </div>
         </header>

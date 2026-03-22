@@ -94,32 +94,48 @@ Deno.serve(async (req) => {
       );
     }
 
-    const orderCreatedAt = new Date(orderData.created_at).getTime();
-    if (!Number.isFinite(orderCreatedAt) || (Date.now() - orderCreatedAt) > 1000 * 60 * 30) {
-      return new Response(
-        JSON.stringify({ ok: false, error: "Pedido fora da janela de notificação." }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 },
-      );
+    const { orderId, customerId, totalPrice, deliveryType, type, newStatus } = body;
+
+    console.log('Recebido:', { orderId, customerId, totalPrice, deliveryType, type, newStatus })
+
+    let tokens: string[] = []
+    let notificationTitle = "🍕 Novo Pedido!"
+    let notificationBody = `Chegou um novo pedido no valor de R$ ${totalPrice?.toFixed(2)}`
+
+    // MODO 1: Notificar Cozinha/Admin sobre novo pedido
+    if (!type || type === 'new_order') {
+      const { data: subs, error: subsError } = await supabase
+        .from('push_subscriptions')
+        .select('token')
+        .in('role', ['kds', 'admin'])
+        .eq('is_active', true)
+
+      if (subsError) throw subsError
+      tokens = subs.map(s => s.token)
+    } 
+    // MODO 2: Notificar Cliente sobre mudança de status
+    else if (type === 'status_update') {
+      // Busca o token do cliente associado ao pedido. 
+      // Como o cliente é anon, buscamos na tabela push_subscriptions com role='customer'
+      // Simplificação: enviamos para todos os tokens 'customer'. 
+      // Melhoria futura: filtrar por token específico do cliente se salvo no pedido.
+      const { data: subs, error: subsError } = await supabase
+        .from('push_subscriptions')
+        .select('token')
+        .eq('role', 'customer')
+        .eq('is_active', true)
+
+      if (subsError) throw subsError
+      tokens = subs.map(s => s.token)
+
+      notificationTitle = newStatus === 'pronto' ? "🌭 Seu pedido está pronto!" : "👨‍🍳 Pedido sendo preparado"
+      notificationBody = newStatus === 'pronto' 
+        ? "Seu pedido no Hotdog Viviane ficou pronto. Vamos te avisar em breve!" 
+        : "Seu delicioso hotdog já entrou na cozinha!"
     }
-
-    const { data: subscriptions, error: subsError } = await supabase
-      .from("push_subscriptions")
-      .select("token")
-      .eq("is_active", true)
-      .not("user_id", "is", null)
-      .in("role", ["kds", "admin"]);
-
-    if (subsError) {
-      throw new Error(`Erro buscando tokens: ${subsError.message}`);
-    }
-
-    const tokens = (subscriptions || []).map((s: { token: string }) => s.token).filter(Boolean);
 
     if (tokens.length === 0) {
-      return new Response(
-        JSON.stringify({ ok: true, sent: 0, skipped: true, reason: "Sem tokens ativos." }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
-      );
+      return new Response(JSON.stringify({ message: 'Nenhum token encontrado' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
     const oauthToken = await getGoogleAccessToken({
@@ -127,12 +143,9 @@ Deno.serve(async (req) => {
       privateKey: firebasePrivateKey,
     });
 
-    const title = "Novo pedido na cozinha";
-    const safeShort = shortIdFromUuid(orderData.id);
-    const details = parseCustomerDetails(orderData.customer_details);
-    const safeCustomer = details.name ? ` (${details.name})` : "";
-    const safeDelivery = orderData.delivery_type === "entrega" ? "Entrega" : "Retirada";
-    const messageBody = `Pedido #${safeShort}${safeCustomer} • ${safeDelivery}`;
+    // Título e corpo já definidos nos blocos if/else acima
+    const messageTitle = notificationTitle;
+    const messageBody = notificationBody;
 
     let sent = 0;
     const invalidTokens: string[] = [];
@@ -151,12 +164,12 @@ Deno.serve(async (req) => {
               message: {
                 token,
                 notification: {
-                  title,
+                  title: messageTitle,
                   body: messageBody,
                 },
                 data: {
                   orderId: body.orderId || "",
-                  shortId: safeShort,
+                  shortId: body.shortId || "",
                   click_action: "/comanda",
                 },
                 webpush: {

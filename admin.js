@@ -61,9 +61,7 @@ async function initAdminFirebaseMessaging() {
     }
 
     adminFirebaseMessaging = window.firebase.messaging();
-    adminFirebaseSwRegistration = await navigator.serviceWorker.register('./firebase-messaging-sw.js', {
-        scope: './firebase-push/'
-    });
+    adminFirebaseSwRegistration = await navigator.serviceWorker.register('./sw.js');
 
     return adminFirebaseMessaging;
 }

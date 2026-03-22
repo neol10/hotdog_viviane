@@ -21,6 +21,18 @@
     <link rel="stylesheet" href="admin.css">
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Limpeza de SW legado -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function (regs) {
+                regs.forEach(function (reg) {
+                    if (reg.active && (reg.active.scriptURL.includes('OneSignal') || reg.active.scriptURL.includes('OneSignalSDKWorker'))) {
+                        reg.unregister();
+                    }
+                });
+            });
+        }
+    </script>
 
     <!-- Supabase Client (CDN) -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
