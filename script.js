@@ -1274,33 +1274,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                         delivery_type: deliveryType
                     };
 
-                    let { data: insertedOrder, error: insertError } = await supabase
+                    let insertedOrder = null;
+                    let { error: insertError } = await supabase
                         .from('orders')
-                        .insert([{ ...orderPayloadBase, delivery_fee: deliveryFee }])
-                        .select('id')
-                        .single();
+                        .insert([{ ...orderPayloadBase, delivery_fee: deliveryFee }]);
 
                     // Compatibilidade com bancos antigos sem a coluna delivery_fee
                     if (insertError && (insertError.message || '').toLowerCase().includes('delivery_fee')) {
                         const retry = await supabase
                             .from('orders')
-                            .insert([orderPayloadBase])
-                            .select('id')
-                            .single();
-                        insertedOrder = retry.data;
+                            .insert([orderPayloadBase]);
                         insertError = retry.error;
-                    }
-
-                    // Com RLS mais estrito, o insert pode funcionar mas o retorno com select('id') pode ser negado.
-                    // Nesse caso, tenta novamente sem retorno para não bloquear o checkout.
-                    if (insertError && ((insertError.status === 401 || insertError.status === 403) || ((insertError.message || '').toLowerCase().includes('permission')))) {
-                        const fallbackInsert = await supabase
-                            .from('orders')
-                            .insert([{ ...orderPayloadBase, delivery_fee: deliveryFee }]);
-                        if (!fallbackInsert.error) {
-                            insertError = null;
-                            insertedOrder = null;
-                        }
                     }
 
                     if (insertError) {
@@ -1308,29 +1292,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         throw insertError;
                     }
 
-                    if (insertedOrder && insertedOrder.id) {
-                        const numericHash = parseInt(insertedOrder.id.replace(/-/g, '').substring(0, 8), 16).toString();
-                        orderShortId = numericHash.slice(-4).padStart(4, '0');
-
-                        let actives = JSON.parse(localStorage.getItem('hotdogViviane_ActiveOrders')) || [];
-                        if (!actives.includes(insertedOrder.id)) actives.push(insertedOrder.id);
-                        localStorage.setItem('hotdogViviane_ActiveOrders', JSON.stringify(actives));
-
-                        // Dispara push para KDS/Admin sem bloquear o fluxo do cliente
-                        fetch(`${supabaseUrl}/functions/v1/send-order-push`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'apikey': supabaseKey,
-                                'Authorization': `Bearer ${supabaseKey}`
-                            },
-                            body: JSON.stringify({
-                                orderId: insertedOrder.id
-                            })
-                        }).catch((pushErr) => {
-                            console.warn('Falha ao disparar push FCM:', pushErr);
-                        });
-                    }
+                    // Se futuramente tivermos um endpoint de criação que retorne o ID com segurança,
+                    // reativamos o push imediato aqui. Por enquanto, evita erro de RLS no checkout.
 
                     if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
                         Notification.requestPermission();
