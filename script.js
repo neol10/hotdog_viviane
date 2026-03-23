@@ -1616,8 +1616,26 @@ window.ensureCustomerFcmSubscription = async function() {
                 updated_at: new Date().toISOString()
             };
             
-            // Tenta salvar (exige que a RLS permita anon insert em push_subscriptions)
-            const { error } = await supabaseClient.from('push_subscriptions').upsert(payload, { onConflict: 'token' });
+            // Para anon/customer: NÃO podemos fazer update se o token já existir com user_id/role diferente.
+            // Então usamos "ignoreDuplicates" para não tentar atualizar em caso de conflito.
+            const { error: upsertErr } = await supabaseClient
+                .from('push_subscriptions')
+                .upsert(payload, { onConflict: 'token', ignoreDuplicates: true });
+
+            // Se já existia como customer, fazemos um update "seguro" (só quando a linha é customer e user_id null)
+            // para manter user_agent/is_active/updated_at atualizados.
+            const { error: updateErr } = await supabaseClient
+                .from('push_subscriptions')
+                .update({
+                    user_agent: payload.user_agent,
+                    is_active: true,
+                    updated_at: payload.updated_at
+                })
+                .eq('token', token)
+                .eq('role', 'customer')
+                .is('user_id', null);
+
+            const error = upsertErr || updateErr;
             if (error) {
                 alert('Não foi possível salvar seu token de notificação (Supabase). Veja o Console (F12).');
                 console.warn('Erro Supabase upsert push_subscriptions (customer):', {
