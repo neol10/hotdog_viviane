@@ -1280,11 +1280,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                         payloadItems.push({ name: `Taxa de Entrega`, price: deliveryFee, quantity: 1 });
                     }
 
+                    // Garante que, se o cliente quiser receber status por push, o token já exista ANTES de criar o pedido.
+                    // (Essa chamada só vai pedir permissão se ainda estiver em 'default' e está dentro de um clique do usuário.)
+                    if (typeof window.ensureCustomerFcmSubscription === 'function') {
+                        try {
+                            await window.ensureCustomerFcmSubscription();
+                        } catch (_) {
+                            // ignora falhas de push; não pode impedir o pedido
+                        }
+                    }
+
+                    const customerPushToken = localStorage.getItem('hotdog_fcm_token_customer');
+
                     const orderPayloadBase = {
                         customer_id: customer ? customer.id : null,
                         total_price: totalPedido,
                         items: JSON.stringify(payloadItems),
-                        customer_details: JSON.stringify({ ...profile, phone: clientPhone }),
+                        customer_details: JSON.stringify({ ...profile, phone: clientPhone, push_token: customerPushToken || null }),
                         status: 'pendente',
                         delivery_type: deliveryType
                     };
@@ -1797,124 +1809,27 @@ window.enableTopbarNotifications = async function() {
         alert('Este navegador não suporta Service Worker. Não é possível ativar push.');
         return;
     }
+
     if (!window.firebase) {
         alert('Firebase não carregou. Recarregue a página e tente novamente.');
         return;
     }
-
     if (Notification.permission === 'denied') {
         alert("⚠️ Notificações bloqueadas!\n\nPara ativar: clique no cadeado ao lado da URL e mude 'Notificações' para 'Permitir'.");
         return;
     }
 
-    let permission = Notification.permission;
-    if (permission === 'default') {
-        permission = await Notification.requestPermission();
-    }
-    if (permission !== 'granted') {
-        alert('Sem permissão de notificação. Ative para receber avisos.');
+    // Na tela inicial, o sino é SEMPRE de cliente.
+    // Notificações de Admin/Comanda devem ser ativadas somente no Admin/KDS.
+    if (typeof window.ensureCustomerFcmSubscription !== 'function') {
+        alert('Notificações não estão disponíveis neste momento. Recarregue a página e tente novamente.');
         return;
     }
 
-    if (!window.firebase.apps.length) {
-        window.firebase.initializeApp(window.firebaseWebConfig);
-    }
-
-    const supabaseClient = window.hotdogSupabaseClient;
-    if (!supabaseClient) {
-        alert('Supabase não carregou. Recarregue a página e tente novamente.');
-        return;
-    }
-    const messaging = window.firebase.messaging();
-    ensureCustomerOnMessageBound(messaging);
-    const reg = await navigator.serviceWorker.register('./sw.js');
-
-    if (!window.firebasePublicVapidKey || !window.validateFirebaseVapidKey || !window.validateFirebaseVapidKey(window.firebasePublicVapidKey)) {
-        alert('Chave VAPID do Firebase inválida. Atualize a VAPID pública em firebase-config.js (Cloud Messaging > Web Push certificates).');
-        return;
-    }
-    const token = await messaging.getToken({
-        vapidKey: window.firebasePublicVapidKey,
-        serviceWorkerRegistration: reg
-    });
-    if (!token) {
-        alert('Não foi possível gerar o token de push (FCM). Veja o Console (F12) para detalhes.');
-        return;
-    }
-
-    const isAdminLogged = localStorage.getItem('hotdog_admin_logged') === 'true';
-    const sessionRes = supabaseClient ? await supabaseClient.auth.getSession() : { data: { session: null } };
-    const session = sessionRes && sessionRes.data ? sessionRes.data.session : null;
-
-    if (isAdminLogged && session && session.user) {
-        const payload = {
-            token: token,
-            user_id: session.user.id,
-            role: 'admin',
-            user_agent: navigator.userAgent,
-            is_active: true,
-            updated_at: new Date().toISOString()
-        };
-        const saveResult = await savePushSubscription(payload, supabaseClient, window.hotdogSupabaseUrl, window.hotdogSupabaseKey);
-        if (!saveResult.ok) {
-            alert('Não foi possível salvar token do Admin (Supabase). Veja o Console (F12).');
-            console.warn('Erro Supabase upsert push_subscriptions (admin):', {
-                status: saveResult.error && saveResult.error.status,
-                code: saveResult.error && saveResult.error.code,
-                message: saveResult.error && saveResult.error.message,
-                details: saveResult.error && saveResult.error.details,
-                hint: saveResult.error && saveResult.error.hint
-            });
-            return;
-        }
-        localStorage.setItem('hotdog_fcm_token_admin', token);
-        if (saveResult.via === 'function') {
-            console.log('Token FCM Admin registrado (via topo, fallback Edge Function).');
-        } else {
-            console.log('Token FCM Admin registrado (via topo).');
-        }
-        alert('✅ Notificações ativadas (Admin)!');
-        return;
-    }
-
-    const payload = {
-        token: token,
-        role: 'customer',
-        user_agent: navigator.userAgent,
-        is_active: true,
-        updated_at: new Date().toISOString()
-    };
-
-    // Cliente (anon): registra direto pela Edge Function para evitar 401 (RLS) no console.
-    const fnResult = await registerPushTokenViaFunction(payload, window.hotdogSupabaseUrl, window.hotdogSupabaseKey);
-    if (!fnResult.ok) {
-        // Se falhar, tenta o caminho antigo como fallback
-        const saveResult = await savePushSubscription(
-            payload,
-            supabaseClient,
-            window.hotdogSupabaseUrl,
-            window.hotdogSupabaseKey,
-            { ignoreDuplicates: true }
-        );
-        if (!saveResult.ok) {
-            alert('Não foi possível salvar token de notificação (Supabase). Veja o Console (F12).');
-            console.warn('Erro ao salvar token push (customer/topo):', {
-                status: saveResult.error && saveResult.error.status,
-                code: saveResult.error && saveResult.error.code,
-                message: saveResult.error && saveResult.error.message,
-                details: saveResult.error && saveResult.error.details,
-                hint: saveResult.error && saveResult.error.hint
-            });
-            return;
-        }
-        localStorage.setItem('hotdog_fcm_token_customer', token);
-        console.log('Token FCM Cliente registrado (via topo).');
+    const ok = await window.ensureCustomerFcmSubscription();
+    if (ok) {
         alert('✅ Notificações ativadas!');
-        return;
     }
-    localStorage.setItem('hotdog_fcm_token_customer', token);
-    console.log('Token FCM Cliente registrado (via topo, Edge Function).');
-    alert('✅ Notificações ativadas!');
 };
 
 // Garantir que AudioContext seja retomado no mobile

@@ -288,6 +288,7 @@ Deno.serve(async (req) => {
     let tokens: string[] = []
     let notificationTitle = "🍕 Novo Pedido!"
     let notificationBody = `Pedido #${safeShort} no valor de R$ ${Number(finalTotalPrice).toFixed(2)}`
+    let clickUrl = "/comanda.html"
 
     // MODO 1: Notificar Cozinha/Admin sobre novo pedido
     if (!type || type === 'new_order') {
@@ -303,15 +304,33 @@ Deno.serve(async (req) => {
     } 
     // MODO 2: Notificar Cliente sobre mudança de status
     else if (type === 'status_update') {
-      const { data: subs, error: subsError } = await supabase
-        .from('push_subscriptions')
-        .select('token')
-        .eq('role', 'customer')
-        .eq('is_active', true)
+      // IMPORTANTÍSSIMO: status do pedido deve ir somente para o cliente daquele pedido.
+      // Para isso, usamos o token gravado junto no customer_details (push_token) no momento do pedido.
+      let customerDetails: any = orderData?.customer_details;
+      try {
+        if (typeof customerDetails === 'string' && customerDetails.trim()) {
+          customerDetails = JSON.parse(customerDetails);
+        }
+      } catch (_e) {
+        // mantém como está
+      }
 
-      if (subsError) throw subsError
-      tokens = subs.map(s => s.token)
-      console.log(`Encontrados ${tokens.length} tokens para Clientes`);
+      const pushToken =
+        (customerDetails && (customerDetails.push_token || customerDetails.pushToken || customerDetails.fcm_token || customerDetails.fcmToken)) ||
+        null;
+
+      if (typeof pushToken === 'string' && pushToken.trim().length > 20) {
+        tokens = [pushToken.trim()]
+        console.log('Encontrado token do cliente no pedido (customer_details.push_token).')
+      } else {
+        console.log('Pedido sem push_token do cliente; não enviando status_update para evitar notificar pessoas erradas.')
+        return new Response(
+          JSON.stringify({ ok: true, message: 'Pedido sem token do cliente para push' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 },
+        )
+      }
+
+      clickUrl = "/"
 
       notificationTitle = newStatus === 'pronto' ? "🌭 Seu pedido está pronto!" : "👨‍🍳 Pedido sendo preparado"
       notificationBody = newStatus === 'pronto' 
@@ -353,8 +372,8 @@ Deno.serve(async (req) => {
                     shortId: String(safeShort),
                     title: String(messageTitle),
                     body: String(messageBody),
-                    url: "/comanda.html",
-                    click_action: "/comanda.html",
+                    url: clickUrl,
+                    click_action: clickUrl,
                   },
                   webpush: {
                     headers: {
@@ -371,11 +390,11 @@ Deno.serve(async (req) => {
                       shortId: String(safeShort),
                       title: String(messageTitle),
                       body: String(messageBody),
-                      url: "/comanda.html",
-                      click_action: "/comanda.html",
+                      url: clickUrl,
+                      click_action: clickUrl,
                     },
                     fcm_options: {
-                      link: "/comanda.html",
+                      link: clickUrl,
                     },
                   },
                 },
