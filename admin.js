@@ -685,8 +685,24 @@ async function checkManualLogin() {
     }
 }
 
+function clearAdminLoginFields() {
+    // Privacidade: não deixar e-mail/senha aparecerem por autofill.
+    try {
+        const u = document.getElementById('login-user');
+        const p = document.getElementById('login-pass');
+        const err = document.getElementById('login-error');
+        if (u) u.value = '';
+        if (p) p.value = '';
+        if (err) err.style.display = 'none';
+    } catch (_) {}
+}
+
 async function checkLogin() {
     ensureDbClient();
+
+    // Limpa o quanto antes para evitar que o browser exiba autofill.
+    clearAdminLoginFields();
+
     if (!dbClient) {
         // Fallback: se o Supabase não carregou, não deixa a tela vazia
         const overlay = document.getElementById('login-overlay');
@@ -730,15 +746,7 @@ function handleSessionChange(session) {
         }
         if (wrapper) wrapper.style.display = 'none';
 
-        // Privacidade: não deixar o e-mail do último acesso aparecendo na tela de login.
-        try {
-            const u = document.getElementById('login-user');
-            const p = document.getElementById('login-pass');
-            const err = document.getElementById('login-error');
-            if (u) u.value = '';
-            if (p) p.value = '';
-            if (err) err.style.display = 'none';
-        } catch (_) {}
+        clearAdminLoginFields();
     }
 }
 

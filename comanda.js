@@ -237,9 +237,20 @@ async function checkSession() {
     });
 }
 
+function clearKdsLoginFields() {
+    // Privacidade: não deixar e-mail/senha aparecerem por autofill.
+    try {
+        const emailEl = document.getElementById('email');
+        const passEl = document.getElementById('password');
+        if (emailEl) emailEl.value = '';
+        if (passEl) passEl.value = '';
+        if (loginError) loginError.style.display = 'none';
+    } catch (_) {}
+}
+
 function handleSessionChange(session) {
     const loginScreen = document.getElementById('login-screen');
-    const dashboard = document.getElementById('comanda-dashboard');
+    const dashboard = document.getElementById('kds-dashboard');
 
     if (session) {
         if (loginScreen) loginScreen.style.display = 'none';
@@ -252,6 +263,7 @@ function handleSessionChange(session) {
     } else {
         if (loginScreen) loginScreen.style.display = 'flex';
         if (dashboard) dashboard.style.display = 'none';
+        clearKdsLoginFields();
     }
 }
 
@@ -259,6 +271,7 @@ function showLoginScreen() {
     loader.classList.remove('active');
     kdsDashboard.style.display = 'none';
     loginScreen.style.display = 'flex';
+    clearKdsLoginFields();
 }
 
 function showKdsDashboard() {
