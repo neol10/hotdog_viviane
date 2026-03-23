@@ -1,25 +1,8 @@
-importScripts('https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js');
-
-try {
-    firebase.initializeApp({
-        apiKey: "AIzaSyBDFLMd9nWbBcUVssT4CIEuFxQCzACDUgI",
-        authDomain: "hotdogviviane.firebaseapp.com",
-        projectId: "hotdogviviane",
-        storageBucket: "hotdogviviane.firebasestorage.app",
-        messagingSenderId: "1064167764931",
-        appId: "1:1064167764931:web:c33d93a61598f22074c376",
-        measurementId: "G-XHHY8FVFZ3"
-    });
-} catch (e) {
-    // ignora erro de init duplicado
-}
-
-const CACHE_NAME = 'hotdog-viviane-cache-v673';
+const CACHE_NAME = 'hotdog-viviane-cache-v674';
 const ASSETS_TO_CACHE = [
     './',
-    './styles.css?v=673',
-    './script.js?v=673',
+    './styles.css?v=674',
+    './script.js?v=674',
     './img/logo_hotdog_viviane.png'
 ];
 
@@ -65,39 +48,45 @@ self.addEventListener('fetch', (event) => {
 });
 
 // ============================================
-// PUSH (FCM) - background via Firebase Messaging
+// PUSH (GENÉRICO) - funciona com FCM Web Push
+// (não depende de importScripts externos; evita falha de update do SW)
 // ============================================
-try {
-    const messaging = firebase.messaging();
+self.addEventListener('push', (event) => {
+    let payload = {};
+    try {
+        payload = event.data ? event.data.json() : {};
+    } catch (e) {
+        try {
+            payload = { data: { body: event.data ? event.data.text() : '' } };
+        } catch {
+            payload = {};
+        }
+    }
 
-    messaging.onBackgroundMessage((payload) => {
-        const notif = payload && payload.notification ? payload.notification : {};
-        const data = payload && payload.data ? payload.data : {};
+    const notif = payload && payload.notification ? payload.notification : {};
+    const data = payload && payload.data ? payload.data : {};
 
-        const clickUrl =
-            data.url ||
-            data.click_action ||
-            (payload && payload.fcmOptions && payload.fcmOptions.link) ||
-            (payload && payload.fcm_options && payload.fcm_options.link) ||
-            notif.click_action ||
-            '/comanda.html';
+    const clickUrl =
+        data.url ||
+        data.click_action ||
+        (payload && payload.fcmOptions && payload.fcmOptions.link) ||
+        (payload && payload.fcm_options && payload.fcm_options.link) ||
+        notif.click_action ||
+        '/comanda.html';
 
-        const title = notif.title || data.title || '🌭 Novo Pedido';
-        const options = {
-            body: notif.body || data.body || 'Chegou um novo pedido no Hotdog Viviane.',
-            icon: 'img/logo_hotdog_viviane.png',
-            badge: 'img/logo_hotdog_viviane.png',
-            vibrate: [200, 100, 200],
-            data: {
-                url: clickUrl
-            }
-        };
+    const title = notif.title || data.title || '🌭 Novo Pedido';
+    const options = {
+        body: notif.body || data.body || 'Chegou um novo pedido no Hotdog Viviane.',
+        icon: 'img/logo_hotdog_viviane.png',
+        badge: 'img/logo_hotdog_viviane.png',
+        vibrate: [200, 100, 200],
+        data: {
+            url: clickUrl
+        }
+    };
 
-        self.registration.showNotification(title, options);
-    });
-} catch (e) {
-    // se Firebase não carregar por algum motivo, o push pode cair no fallback do navegador
-}
+    event.waitUntil(self.registration.showNotification(title, options));
+});
 
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
