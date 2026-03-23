@@ -342,6 +342,23 @@ Deno.serve(async (req) => {
                     click_action: "/comanda.html",
                   },
                   webpush: {
+                    headers: {
+                      Urgency: "high",
+                    },
+                    notification: {
+                      title: messageTitle,
+                      body: messageBody,
+                      icon: "/img/logo_hotdog_viviane.png",
+                      badge: "/img/logo_hotdog_viviane.png",
+                    },
+                    data: {
+                      orderId: String(finalOrderId),
+                      shortId: String(safeShort),
+                      title: String(messageTitle),
+                      body: String(messageBody),
+                      url: "/comanda.html",
+                      click_action: "/comanda.html",
+                    },
                     fcm_options: {
                       link: "/comanda.html",
                     },

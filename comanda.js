@@ -128,9 +128,14 @@ async function initFirebaseMessaging() {
     firebaseMessaging.onMessage((payload) => {
         try {
             const notif = payload && payload.notification ? payload.notification : {};
+            const data = payload && payload.data ? payload.data : {};
+
+            const title = notif.title || data.title || 'Novo pedido';
+            const body = notif.body || data.body || 'Chegou um novo pedido na comanda.';
+
             if ('Notification' in window && Notification.permission === 'granted') {
-                new Notification(notif.title || 'Novo pedido', {
-                    body: notif.body || 'Chegou um novo pedido na comanda.',
+                new Notification(title, {
+                    body,
                     icon: 'img/logo_hotdog_viviane.png'
                 });
             }
