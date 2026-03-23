@@ -10,12 +10,39 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.hotdogSupabaseUrl = supabaseUrl;
     window.hotdogSupabaseKey = supabaseKey;
 
+    function updateHeaderNotifButtonUI() {
+        const btn = document.getElementById('header-notif-btn');
+        if (!btn) return;
+
+        const icon = btn.querySelector('i');
+        const permission = (typeof Notification !== 'undefined' && Notification.permission) ? Notification.permission : 'default';
+        const hasToken = !!localStorage.getItem('hotdog_fcm_token_customer');
+
+        if (!icon) return;
+
+        if (permission === 'granted' && hasToken) {
+            icon.className = 'ph-fill ph-bell-ringing';
+            btn.title = 'Notificações ativas';
+            btn.setAttribute('aria-label', 'Notificações ativas');
+        } else if (permission === 'denied') {
+            icon.className = 'ph ph-bell-slash';
+            btn.title = 'Notificações bloqueadas';
+            btn.setAttribute('aria-label', 'Notificações bloqueadas');
+        } else {
+            icon.className = 'ph ph-bell';
+            btn.title = 'Ativar notificações';
+            btn.setAttribute('aria-label', 'Ativar notificações');
+        }
+    }
+
     // Sino do topo (ativar notificações)
     const headerNotifBtn = document.getElementById('header-notif-btn');
     if (headerNotifBtn) {
+        updateHeaderNotifButtonUI();
         headerNotifBtn.addEventListener('click', async () => {
             try {
                 await window.enableTopbarNotifications();
+                updateHeaderNotifButtonUI();
             } catch (e) {
                 console.warn('Falha ao ativar notificações:', e);
             }

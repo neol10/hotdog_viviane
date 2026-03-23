@@ -729,6 +729,16 @@ function handleSessionChange(session) {
             overlay.classList.add('active');
         }
         if (wrapper) wrapper.style.display = 'none';
+
+        // Privacidade: não deixar o e-mail do último acesso aparecendo na tela de login.
+        try {
+            const u = document.getElementById('login-user');
+            const p = document.getElementById('login-pass');
+            const err = document.getElementById('login-error');
+            if (u) u.value = '';
+            if (p) p.value = '';
+            if (err) err.style.display = 'none';
+        } catch (_) {}
     }
 }
 
