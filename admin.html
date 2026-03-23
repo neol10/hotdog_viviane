@@ -26,12 +26,21 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(function (regs) {
                 regs.forEach(function (reg) {
-                    if (reg.active && (reg.active.scriptURL.includes('OneSignal') || reg.active.scriptURL.includes('OneSignalSDKWorker'))) {
+                    const activeUrl = reg.active && reg.active.scriptURL ? String(reg.active.scriptURL) : '';
+                    const isOurSw = activeUrl.includes('/sw.js');
+                    const isOneSignal = activeUrl.includes('OneSignal') || activeUrl.includes('OneSignalSDKWorker');
+                    if (activeUrl && (!isOurSw || isOneSignal)) {
                         reg.unregister();
+                        return;
                     }
+                    reg.update();
                 });
             });
         }
+
+        try {
+            localStorage.setItem('hotdog_last_route', window.location.pathname + window.location.hash);
+        } catch (e) {}
     </script>
 
     <!-- Supabase Client (CDN) -->

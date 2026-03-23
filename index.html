@@ -35,7 +35,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
     <!-- CSS -->
-    <link rel="stylesheet" href="styles.css?v=675">
+    <link rel="stylesheet" href="styles.css?v=676">
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ef4444">
@@ -49,25 +49,42 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js"></script>
     <script src="firebase-config.js"></script>
-    <!-- Limpeza de cache antigo (remove SW e caches velhos) -->
+    <!-- Persistência de navegação (PWA) + limpeza de SW legado -->
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(function (regs) {
                 regs.forEach(function (reg) {
-                    // Se encontrar o OneSignal ou service workers que não sejam o sw.js atual
-                    if (reg.active && (reg.active.scriptURL.includes('OneSignal') || reg.active.scriptURL.includes('OneSignalSDKWorker'))) {
-                        console.log('Removendo Service Worker legado do OneSignal:', reg.active.scriptURL);
+                    const activeUrl = reg.active && reg.active.scriptURL ? String(reg.active.scriptURL) : '';
+                    const isOurSw = activeUrl.includes('/sw.js');
+                    const isOneSignal = activeUrl.includes('OneSignal') || activeUrl.includes('OneSignalSDKWorker');
+
+                    // Remove qualquer SW legado (OneSignal, firebase-messaging-sw, etc.).
+                    if (activeUrl && (!isOurSw || isOneSignal)) {
+                        console.log('Removendo Service Worker legado:', activeUrl);
                         reg.unregister();
-                    } else {
-                        reg.update(); 
+                        return;
                     }
+
+                    reg.update();
                 });
             });
-            caches.keys().then(function (keys) {
-                keys.filter(function (k) { return k !== 'hotdog-viviane-cache-v667'; })
-                    .forEach(function (k) { caches.delete(k); });
-            });
         }
+
+        // Salva última rota para reabrir o PWA onde parou
+        try {
+            localStorage.setItem('hotdog_last_route', window.location.pathname + window.location.hash);
+        } catch (e) {}
+
+        // Se admin estiver logado, reabre direto no Admin/Comanda ao iniciar o PWA
+        try {
+            const isAdminLogged = localStorage.getItem('hotdog_admin_logged') === 'true';
+            const lastRoute = localStorage.getItem('hotdog_last_route') || '';
+            const isIndex = window.location.pathname === '/' || window.location.pathname.endsWith('/index.html');
+            const wantsAdminRoute = lastRoute.includes('admin.html') || lastRoute.includes('comanda.html');
+            if (isIndex && isAdminLogged && wantsAdminRoute) {
+                window.location.replace(lastRoute);
+            }
+        } catch (e) {}
     </script>
 </head>
 
@@ -81,7 +98,7 @@
             </span>
             <script>
                 document.getElementById('logo-secret').addEventListener('dblclick', function () {
-                    window.location.href = '/admin';
+                    window.location.href = './admin.html';
                 });
             </script>
             <nav class="nav-links" id="nav-links">
@@ -471,7 +488,7 @@
 
     <!-- Script para Interatividade & Supabase -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script src="script.js?v=675"></script>
+    <script src="script.js?v=676"></script>
     <!-- Registrar Service Worker PWA -->
     <script>
         if ('serviceWorker' in navigator) {

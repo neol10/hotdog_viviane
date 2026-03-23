@@ -13,12 +13,21 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(function (regs) {
                 regs.forEach(function (reg) {
-                    if (reg.active && (reg.active.scriptURL.includes('OneSignal') || reg.active.scriptURL.includes('OneSignalSDKWorker'))) {
+                    const activeUrl = reg.active && reg.active.scriptURL ? String(reg.active.scriptURL) : '';
+                    const isOurSw = activeUrl.includes('/sw.js');
+                    const isOneSignal = activeUrl.includes('OneSignal') || activeUrl.includes('OneSignalSDKWorker');
+                    if (activeUrl && (!isOurSw || isOneSignal)) {
                         reg.unregister();
+                        return;
                     }
+                    reg.update();
                 });
             });
         }
+
+        try {
+            localStorage.setItem('hotdog_last_route', window.location.pathname + window.location.hash);
+        } catch (e) {}
     </script>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="img/logo_hotdog_viviane.png">
@@ -57,7 +66,7 @@
                     Comanda</button>
             </form>
             <div style="margin-top: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
-                <a href="/admin.html" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                <a href="./admin.html" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 5px;">
                     <i class="ph ph-arrow-left"></i> Voltar para Painel Admin
                 </a>
             </div>
