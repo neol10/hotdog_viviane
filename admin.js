@@ -644,7 +644,10 @@ function handleSessionChange(session) {
 
     if (session) {
         localStorage.setItem('hotdog_admin_logged', 'true');
-        if (overlay) overlay.style.display = 'none';
+        if (overlay) {
+            overlay.classList.remove('active');
+            overlay.style.display = 'none';
+        }
         if (wrapper) wrapper.style.display = 'block';
         
         // Só inicializa se for a primeira vez ou se as abas estiverem vazias
@@ -654,7 +657,10 @@ function handleSessionChange(session) {
         }
     } else {
         localStorage.removeItem('hotdog_admin_logged');
-        if (overlay) overlay.style.display = 'flex';
+        if (overlay) {
+            overlay.style.display = 'flex';
+            overlay.classList.add('active');
+        }
         if (wrapper) wrapper.style.display = 'none';
     }
 }
