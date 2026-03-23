@@ -3,6 +3,7 @@
     "short_name": "HotdogViviane",
     "description": "O melhor hot dog da região! Prensados, de colher e muito mais.",
     "start_url": "./",
+    "gcm_sender_id": "103953800507",
     "display": "standalone",
     "background_color": "#1a0505",
     "theme_color": "#dc3545",

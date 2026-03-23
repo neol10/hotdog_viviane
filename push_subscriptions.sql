@@ -37,12 +37,39 @@ create policy push_subscriptions_update
     on public.push_subscriptions
     for update
     to authenticated
-    using (
-        auth.uid() = user_id
-    )
+    using (true)
     with check (
         auth.uid() = user_id
         and role in ('kds', 'admin')
+        and token is not null
+        and length(token) > 20
+    );
+
+-- Cliente (anon): permitir registrar token FCM como role=customer
+drop policy if exists push_subscriptions_insert_customer on public.push_subscriptions;
+create policy push_subscriptions_insert_customer
+    on public.push_subscriptions
+    for insert
+    to anon, authenticated
+    with check (
+        role = 'customer'
+        and user_id is null
+        and token is not null
+        and length(token) > 20
+    );
+
+drop policy if exists push_subscriptions_update_customer on public.push_subscriptions;
+create policy push_subscriptions_update_customer
+    on public.push_subscriptions
+    for update
+    to anon, authenticated
+    using (
+        role = 'customer'
+        and user_id is null
+    )
+    with check (
+        role = 'customer'
+        and user_id is null
         and token is not null
         and length(token) > 20
     );

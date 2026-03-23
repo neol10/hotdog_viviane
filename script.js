@@ -5,6 +5,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     const supabaseUrl = 'https://mnygtmcwgkrkqluaqyfe.supabase.co';
     const supabaseKey = 'sb_publishable_Uj4W02FU_mmn4zA86JTukw_vbzRyMqR';
     const supabase = window.supabase ? window.supabase.createClient(supabaseUrl, supabaseKey) : null;
+    // Expor para funções globais (fora do DOMContentLoaded)
+    window.hotdogSupabaseClient = supabase;
+
+    // Sino do topo (ativar notificações)
+    const headerNotifBtn = document.getElementById('header-notif-btn');
+    if (headerNotifBtn) {
+        headerNotifBtn.addEventListener('click', async () => {
+            try {
+                await window.enableTopbarNotifications();
+            } catch (e) {
+                console.warn('Falha ao ativar notificações:', e);
+            }
+        });
+    }
 
     // Helper para evitar XSS (Injeção de Script)
     function esc(t) {
@@ -1569,6 +1583,9 @@ window.ensureCustomerFcmSubscription = async function() {
     if (Notification.permission !== 'granted') return;
 
     try {
+        const supabaseClient = window.hotdogSupabaseClient;
+        if (!supabaseClient) return;
+
         if (!window.firebase.apps.length) {
             window.firebase.initializeApp(window.firebaseWebConfig);
         }
@@ -1582,7 +1599,8 @@ window.ensureCustomerFcmSubscription = async function() {
             serviceWorkerRegistration: reg
         });
 
-        if (token && token !== clientFcmToken) {
+        const savedToken = localStorage.getItem('hotdog_fcm_token_customer');
+        if (token && (token !== clientFcmToken || token !== savedToken)) {
             clientFcmToken = token;
             // Salva no Supabase como role 'customer' para o administrador saber
             const payload = {
@@ -1594,12 +1612,62 @@ window.ensureCustomerFcmSubscription = async function() {
             };
             
             // Tenta salvar (exige que a RLS permita anon insert em push_subscriptions)
-            await supabase.from('push_subscriptions').upsert(payload, { onConflict: 'token' });
+            await supabaseClient.from('push_subscriptions').upsert(payload, { onConflict: 'token' });
+            localStorage.setItem('hotdog_fcm_token_customer', token);
             console.log("Token FCM Cliente registrado.");
         }
     } catch (e) {
         console.warn("Erro ao registrar FCM do cliente:", e);
     }
+};
+
+// ==========================================
+// 8B. FIREBASE PUSH (SINO DO TOPO)
+// - Se admin logado: registra como 'admin' (authenticated)
+// - Senão: registra como 'customer' (anon)
+// ==========================================
+window.enableTopbarNotifications = async function() {
+    if (!('Notification' in window) || !window.firebase || !('serviceWorker' in navigator)) return;
+
+    if (Notification.permission === 'default') {
+        await Notification.requestPermission();
+    }
+    if (Notification.permission !== 'granted') return;
+
+    if (!window.firebase.apps.length) {
+        window.firebase.initializeApp(window.firebaseWebConfig);
+    }
+
+    const supabaseClient = window.hotdogSupabaseClient;
+    const messaging = window.firebase.messaging();
+    const reg = await navigator.serviceWorker.register('./sw.js');
+    const token = await messaging.getToken({
+        vapidKey: window.firebasePublicVapidKey,
+        serviceWorkerRegistration: reg
+    });
+    if (!token) return;
+
+    const isAdminLogged = localStorage.getItem('hotdog_admin_logged') === 'true';
+    const sessionRes = supabaseClient ? await supabaseClient.auth.getSession() : { data: { session: null } };
+    const session = sessionRes && sessionRes.data ? sessionRes.data.session : null;
+
+    if (isAdminLogged && session && session.user) {
+        const payload = {
+            token: token,
+            user_id: session.user.id,
+            role: 'admin',
+            user_agent: navigator.userAgent,
+            is_active: true,
+            updated_at: new Date().toISOString()
+        };
+        await supabaseClient.from('push_subscriptions').upsert(payload, { onConflict: 'token' });
+        localStorage.setItem('hotdog_fcm_token_admin', token);
+        console.log('Token FCM Admin registrado (via topo).');
+        return;
+    }
+
+    // Caso não seja admin logado, registra como cliente
+    await window.ensureCustomerFcmSubscription();
 };
 
 // Garantir que AudioContext seja retomado no mobile
