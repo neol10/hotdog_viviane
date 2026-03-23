@@ -109,20 +109,15 @@ Deno.serve(async (req) => {
                 body: JSON.stringify({
                   message: {
                     token,
-                    notification: {
+                    data: {
                       title: messageTitle,
                       body: messageBody,
-                    },
-                    data: {
+                      url: "/",
                       click_action: "/",
                     },
                     webpush: {
                       fcm_options: {
                         link: "/",
-                      },
-                      notification: {
-                        icon: "https://newneo.com.br/img/logo_hotdog_viviane.png",
-                        badge: "https://newneo.com.br/img/logo_hotdog_viviane.png",
                       },
                     },
                   },
@@ -338,22 +333,17 @@ Deno.serve(async (req) => {
               body: JSON.stringify({
                 message: {
                   token,
-                  notification: {
-                    title: messageTitle,
-                    body: messageBody,
-                  },
                   data: {
                     orderId: String(finalOrderId),
                     shortId: String(safeShort),
+                      title: messageTitle,
+                      body: messageBody,
+                      url: "/comanda.html",
                     click_action: "/comanda.html",
                   },
                   webpush: {
                     fcm_options: {
                       link: "/comanda.html",
-                    },
-                    notification: {
-                      icon: "https://newneo.com.br/img/logo_hotdog_viviane.png",
-                      badge: "https://newneo.com.br/img/logo_hotdog_viviane.png",
                     },
                   },
                 },
