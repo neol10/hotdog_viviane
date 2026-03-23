@@ -643,15 +643,24 @@ body.kds-flash {
         overflow-y: hidden;
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
-        padding: 10px;
-        gap: 10px;
-        height: calc(100vh - 120px);
+        padding: 8px;
+        gap: 8px;
+        height: calc(100vh - 110px);
     }
 
     .kds-lane {
-        min-width: 85vw;
-        flex: 0 0 85vw;
+        min-width: 88vw;
+        flex: 0 0 88vw;
         scroll-snap-align: start;
+    }
+
+    .lane-header {
+        padding: 10px 12px;
+    }
+
+    .lane-cards {
+        padding: 8px;
+        gap: 8px;
     }
 
     .kds-compact-footer {
@@ -663,13 +672,54 @@ body.kds-flash {
         flex-wrap: wrap;
     }
 
-    /* Cards do KDS: padding menor */
+    /* Cards do KDS: mais compactos em mobile */
     .kds-card {
-        padding: 14px;
+        padding: 10px 12px;
+    }
+
+    .kds-card-header {
+        margin-bottom: 8px;
+        padding-bottom: 8px;
     }
 
     .kds-order-id {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
+    }
+
+    .kds-order-time {
+        font-size: 0.8rem;
+    }
+
+    .kds-delivery-badge {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+    }
+
+    .kds-customer {
+        font-size: 0.95rem;
+        margin-bottom: 10px;
+    }
+
+    .kds-items li {
+        font-size: 1.05rem;
+        padding: 6px 0;
+    }
+
+    .kds-items .qty {
+        width: 24px;
+        height: 24px;
+        font-size: 0.9rem;
+        margin-right: 8px;
+    }
+
+    .kds-items {
+        margin-bottom: 12px;
+    }
+
+    .kds-card-actions button {
+        padding: 8px;
+        font-size: 0.9rem;
     }
 
     /* Login card: padding menor */
@@ -681,21 +731,61 @@ body.kds-flash {
 
 @media (max-width: 420px) {
     .kds-lane {
-        min-width: 92vw;
-        flex: 0 0 92vw;
+        min-width: 95vw;
+        flex: 0 0 95vw;
     }
 
     .lane-header h2 {
+        font-size: 0.9rem;
+    }
+
+    .kds-order-id {
+        font-size: 1rem;
+    }
+
+    .kds-items li {
         font-size: 0.95rem;
     }
 
     .kds-compact-body {
         flex-direction: column;
         align-items: flex-start;
-        gap: 8px;
+        gap: 6px;
     }
 
     .kds-compact-client {
         max-width: 100%;
+        font-size: 0.9rem;
+    }
+    /* Ajuste de tamanho dos cards compactos para caber mais pedidos */
+    .kds-card-compact {
+        padding: 8px 6px;
+    }
+    .kds-compact-id {
+        font-size: 1.05rem;
+    }
+    .kds-compact-time {
+        font-size: 0.75rem;
+    }
+    .kds-compact-client {
+        font-size: 0.85rem;
+    }
+    .kds-compact-items-count {
+        font-size: 0.7rem;
+        padding: 2px 5px;
+    }
+    .kds-compact-footer {
+        gap: 4px;
+    }
+    .kds-badge-mini {
+        font-size: 0.65rem;
+        padding: 2px 5px;
+    }
+    .btn-whatsapp-compact {
+        font-size: 0.7rem;
+        padding: 4px 6px;
+    }
+    .kds-action-hint {
+        font-size: 0.7rem;
     }
 }
