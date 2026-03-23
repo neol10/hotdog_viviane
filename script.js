@@ -1627,25 +1627,52 @@ window.ensureCustomerFcmSubscription = async function() {
 // - Senão: registra como 'customer' (anon)
 // ==========================================
 window.enableTopbarNotifications = async function() {
-    if (!('Notification' in window) || !window.firebase || !('serviceWorker' in navigator)) return;
-
-    if (Notification.permission === 'default') {
-        await Notification.requestPermission();
+    if (!('Notification' in window)) {
+        alert('Seu navegador não suporta notificações neste dispositivo.');
+        return;
     }
-    if (Notification.permission !== 'granted') return;
+    if (!('serviceWorker' in navigator)) {
+        alert('Este navegador não suporta Service Worker. Não é possível ativar push.');
+        return;
+    }
+    if (!window.firebase) {
+        alert('Firebase não carregou. Recarregue a página e tente novamente.');
+        return;
+    }
+
+    if (Notification.permission === 'denied') {
+        alert("⚠️ Notificações bloqueadas!\n\nPara ativar: clique no cadeado ao lado da URL e mude 'Notificações' para 'Permitir'.");
+        return;
+    }
+
+    let permission = Notification.permission;
+    if (permission === 'default') {
+        permission = await Notification.requestPermission();
+    }
+    if (permission !== 'granted') {
+        alert('Sem permissão de notificação. Ative para receber avisos.');
+        return;
+    }
 
     if (!window.firebase.apps.length) {
         window.firebase.initializeApp(window.firebaseWebConfig);
     }
 
     const supabaseClient = window.hotdogSupabaseClient;
+    if (!supabaseClient) {
+        alert('Supabase não carregou. Recarregue a página e tente novamente.');
+        return;
+    }
     const messaging = window.firebase.messaging();
     const reg = await navigator.serviceWorker.register('./sw.js');
     const token = await messaging.getToken({
         vapidKey: window.firebasePublicVapidKey,
         serviceWorkerRegistration: reg
     });
-    if (!token) return;
+    if (!token) {
+        alert('Não foi possível gerar o token de push (FCM). Veja o Console (F12) para detalhes.');
+        return;
+    }
 
     const isAdminLogged = localStorage.getItem('hotdog_admin_logged') === 'true';
     const sessionRes = supabaseClient ? await supabaseClient.auth.getSession() : { data: { session: null } };
@@ -1668,6 +1695,8 @@ window.enableTopbarNotifications = async function() {
 
     // Caso não seja admin logado, registra como cliente
     await window.ensureCustomerFcmSubscription();
+
+    alert('✅ Notificações ativadas!');
 };
 
 // Garantir que AudioContext seja retomado no mobile
