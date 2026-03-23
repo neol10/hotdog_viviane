@@ -109,6 +109,11 @@ async function ensureAdminFcmSubscription() {
     const messaging = await initAdminFirebaseMessaging();
     if (!messaging || !window.firebasePublicVapidKey) return;
 
+    if (!window.validateFirebaseVapidKey || !window.validateFirebaseVapidKey(window.firebasePublicVapidKey)) {
+        alert('Chave VAPID do Firebase inválida. Atualize a VAPID pública em firebase-config.js (Cloud Messaging > Web Push certificates).');
+        return;
+    }
+
     const token = await messaging.getToken({
         vapidKey: window.firebasePublicVapidKey,
         serviceWorkerRegistration: adminFirebaseSwRegistration

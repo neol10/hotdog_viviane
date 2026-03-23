@@ -1593,6 +1593,11 @@ window.ensureCustomerFcmSubscription = async function() {
         
         // Usa o sw.js principal que agora tem o Firebase integrado
         const reg = await navigator.serviceWorker.register('./sw.js');
+
+        if (!window.firebasePublicVapidKey || !window.validateFirebaseVapidKey || !window.validateFirebaseVapidKey(window.firebasePublicVapidKey)) {
+            alert('Chave VAPID do Firebase inválida. Atualize a VAPID pública em firebase-config.js (Cloud Messaging > Web Push certificates).');
+            return false;
+        }
         
         const token = await messaging.getToken({
             vapidKey: window.firebasePublicVapidKey,
@@ -1624,7 +1629,11 @@ window.ensureCustomerFcmSubscription = async function() {
         }
     } catch (e) {
         console.warn("Erro ao registrar FCM do cliente:", e);
-        alert('Falha ao ativar notificações. Veja o Console (F12).');
+        if (String(e && e.message || e).includes('applicationServerKey is not valid')) {
+            alert('Falha ao ativar notificações: VAPID inválida no Firebase. Confira a chave pública de Web Push no Firebase.');
+        } else {
+            alert('Falha ao ativar notificações. Veja o Console (F12).');
+        }
         return false;
     }
     return true;
@@ -1674,6 +1683,11 @@ window.enableTopbarNotifications = async function() {
     }
     const messaging = window.firebase.messaging();
     const reg = await navigator.serviceWorker.register('./sw.js');
+
+    if (!window.firebasePublicVapidKey || !window.validateFirebaseVapidKey || !window.validateFirebaseVapidKey(window.firebasePublicVapidKey)) {
+        alert('Chave VAPID do Firebase inválida. Atualize a VAPID pública em firebase-config.js (Cloud Messaging > Web Push certificates).');
+        return;
+    }
     const token = await messaging.getToken({
         vapidKey: window.firebasePublicVapidKey,
         serviceWorkerRegistration: reg
