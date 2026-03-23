@@ -45,6 +45,7 @@ let realtimeHeartbeat = null;
 let firebaseMessaging = null;
 let firebaseSwRegistration = null;
 let currentFcmToken = null;
+const updatingOrders = new Set();
 
 // ============================================
 // FUNÇÕES AUXILIARES
@@ -374,7 +375,10 @@ async function fetchActiveOrders() {
         return;
     }
 
-    kdsOrders = data || [];
+    // Filtrar pedidos que estão sendo atualizados localmente para evitar que "voltem" na tela
+    const filteredData = (data || []).filter(o => !updatingOrders.has(o.id.toString()));
+    
+    kdsOrders = filteredData;
 
     // Redundância: Toca som se houver novo pedido detectado via polling (caso realtime falhe)
     if (!isInitialLoad && kdsOrders.filter(o => o.status === 'pendente').length > lastOrderCount) {
@@ -621,7 +625,10 @@ window.changeOrderStatus = async function (orderId, newStatus) {
         renderLanes();
 
         // Em background, atualiza o bano
+        updatingOrders.add(orderId.toString());
         const { error } = await dbClient.from('orders').update({ status: newStatus }).eq('id', orderId);
+        updatingOrders.delete(orderId.toString());
+
         if (error) {
             console.error("Erro ao atualizar status", error);
             // Reverte em caso de erro
