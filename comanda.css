@@ -673,32 +673,36 @@ body.kds-flash {
     }
 
     /* Cards do KDS: mais compactos em mobile */
-    .kds-card {
+    .kds-card, .kds-card-compact {
         padding: 10px 12px;
     }
 
-    .kds-card-header {
-        margin-bottom: 8px;
-        padding-bottom: 8px;
+    .kds-card-header, .kds-compact-header {
+        margin-bottom: 6px;
+        padding-bottom: 6px;
     }
 
-    .kds-order-id {
+    .kds-order-id, .kds-compact-id {
         font-size: 1.1rem;
     }
 
-    .kds-order-time {
+    .kds-order-time, .kds-compact-time {
         font-size: 0.8rem;
     }
 
-    .kds-delivery-badge {
+    .kds-delivery-badge, .kds-badge-mini {
         padding: 4px 8px;
         font-size: 0.75rem;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
 
-    .kds-customer {
+    .kds-customer, .kds-compact-client {
         font-size: 0.95rem;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
+    }
+
+    .kds-compact-body {
+        margin-bottom: 8px;
     }
 
     .kds-items li {
@@ -714,12 +718,16 @@ body.kds-flash {
     }
 
     .kds-items {
-        margin-bottom: 12px;
+        margin-bottom: 10px;
     }
 
-    .kds-card-actions button {
-        padding: 8px;
-        font-size: 0.9rem;
+    .kds-card-actions button, .kds-action-hint button, .btn-whatsapp-compact {
+        padding: 6px 10px;
+        font-size: 0.85rem;
+    }
+
+    .kds-action-hint {
+        gap: 6px !important;
     }
 
     /* Login card: padding menor */
@@ -739,7 +747,7 @@ body.kds-flash {
         font-size: 0.9rem;
     }
 
-    .kds-order-id {
+    .kds-order-id, .kds-compact-id {
         font-size: 1rem;
     }
 
@@ -750,12 +758,12 @@ body.kds-flash {
     .kds-compact-body {
         flex-direction: column;
         align-items: flex-start;
-        gap: 6px;
+        gap: 4px;
     }
 
     .kds-compact-client {
         max-width: 100%;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
     /* Ajuste de tamanho dos cards compactos para caber mais pedidos */
     .kds-card-compact {
