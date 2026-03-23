@@ -1,8 +1,8 @@
-const CACHE_NAME = 'hotdog-viviane-cache-v674';
+const CACHE_NAME = 'hotdog-viviane-cache-v675';
 const ASSETS_TO_CACHE = [
     './',
-    './styles.css?v=674',
-    './script.js?v=674',
+    './styles.css?v=675',
+    './script.js?v=675',
     './img/logo_hotdog_viviane.png'
 ];
 

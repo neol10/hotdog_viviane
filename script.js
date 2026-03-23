@@ -1653,6 +1653,50 @@ async function savePushSubscription(payload, supabaseClient, supabaseUrl, supaba
     return { ok: false, error: fallback.error || error };
 }
 
+function playHotdogPushSound() {
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+
+        if (!window.audioCtx) {
+            window.audioCtx = new AudioCtx();
+        }
+        const ctx = window.audioCtx;
+        if (ctx.state === 'suspended') {
+            ctx.resume().catch(() => {});
+        }
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 880;
+        gain.gain.value = 0.0001;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+
+        const now = ctx.currentTime;
+        gain.gain.exponentialRampToValueAtTime(0.2, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.20);
+        osc.stop(now + 0.21);
+    } catch (e) {
+        // ignora (alguns navegadores bloqueiam áudio sem gesto do usuário)
+    }
+}
+
+function ensureCustomerOnMessageBound(messaging) {
+    if (!messaging) return;
+    if (window.__hotdogFcmCustomerOnMessageBound) return;
+    window.__hotdogFcmCustomerOnMessageBound = true;
+    try {
+        messaging.onMessage(() => {
+            playHotdogPushSound();
+        });
+    } catch (_) {
+        // ignore
+    }
+}
+
 window.ensureCustomerFcmSubscription = async function() {
     if (!('Notification' in window) || !window.firebase || !('serviceWorker' in navigator)) return;
 
@@ -1669,6 +1713,7 @@ window.ensureCustomerFcmSubscription = async function() {
             window.firebase.initializeApp(window.firebaseWebConfig);
         }
         const messaging = window.firebase.messaging();
+        ensureCustomerOnMessageBound(messaging);
         
         // Usa o sw.js principal que agora tem o Firebase integrado
         const reg = await navigator.serviceWorker.register('./sw.js');
@@ -1780,6 +1825,7 @@ window.enableTopbarNotifications = async function() {
         return;
     }
     const messaging = window.firebase.messaging();
+    ensureCustomerOnMessageBound(messaging);
     const reg = await navigator.serviceWorker.register('./sw.js');
 
     if (!window.firebasePublicVapidKey || !window.validateFirebaseVapidKey || !window.validateFirebaseVapidKey(window.firebasePublicVapidKey)) {
