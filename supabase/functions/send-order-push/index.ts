@@ -12,6 +12,11 @@ type PushPayload = {
   totalPrice?: number;
   deliveryType?: string;
   createdAtIso?: string;
+  type?: string;
+  newStatus?: string;
+  role?: "kds" | "admin" | "customer" | "all";
+  token?: string;
+  test?: boolean;
 };
 
 Deno.serve(async (req) => {
@@ -39,6 +44,125 @@ Deno.serve(async (req) => {
     const firebasePrivateKey = firebasePrivateKeyRaw.replace(/\\n/g, "\n");
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+    // ==========================
+    // MODO TESTE (diagnóstico)
+    // ==========================
+    const isTest = body.test === true || body.type === "test";
+
+    if (isTest) {
+      const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+      let tokens: string[] = [];
+
+      if (body.token && body.token.length > 20) {
+        tokens = [body.token];
+      } else {
+        const role = body.role || "all";
+        let q = supabase
+          .from("push_subscriptions")
+          .select("token")
+          .eq("is_active", true);
+
+        if (role !== "all") {
+          q = q.eq("role", role);
+        }
+
+        const { data: subs, error: subsError } = await q;
+        if (subsError) throw subsError;
+        tokens = (subs || []).map((s: { token: string }) => s.token);
+      }
+
+      if (tokens.length === 0) {
+        return new Response(
+          JSON.stringify({ ok: true, mode: "test", message: "Nenhum token encontrado" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
+        );
+      }
+
+      const oauthToken = await getGoogleAccessToken({
+        clientEmail: firebaseClientEmail,
+        privateKey: firebasePrivateKey,
+      });
+
+      const messageTitle = "✅ Push de Teste (Hotdog Viviane)";
+      const messageBody = `Se você recebeu isso, o FCM está OK. (${new Date().toISOString()})`;
+
+      let sent = 0;
+      const invalidTokens: string[] = [];
+      const errors: Array<{ tokenPrefix: string; error: string }> = [];
+
+      await Promise.all(
+        tokens.map(async (token) => {
+          try {
+            const resp = await fetch(
+              `https://fcm.googleapis.com/v1/projects/${firebaseProjectId}/messages:send`,
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${oauthToken}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  message: {
+                    token,
+                    notification: {
+                      title: messageTitle,
+                      body: messageBody,
+                    },
+                    data: {
+                      click_action: "/",
+                    },
+                    webpush: {
+                      fcm_options: {
+                        link: "/",
+                      },
+                      notification: {
+                        icon: "https://newneo.com.br/img/logo_hotdog_viviane.png",
+                        badge: "https://newneo.com.br/img/logo_hotdog_viviane.png",
+                      },
+                    },
+                  },
+                }),
+              },
+            );
+
+            if (resp.ok) {
+              sent += 1;
+            } else {
+              const errText = await resp.text();
+              console.warn(`Erro FCM para token ${token.substring(0, 10)}... : ${errText}`);
+              if (errors.length < 5) {
+                errors.push({
+                  tokenPrefix: `${token.substring(0, 10)}...`,
+                  error: errText.slice(0, 500),
+                });
+              }
+              if (errText.includes("UNREGISTERED") || errText.includes("registration-token-not-registered")) {
+                invalidTokens.push(token);
+              }
+            }
+          } catch (e) {
+            console.error(`Falha ao disparar fetch FCM (test): ${e.message}`);
+            if (errors.length < 5) {
+              errors.push({
+                tokenPrefix: `${token.substring(0, 10)}...`,
+                error: String(e?.message || e).slice(0, 300),
+              });
+            }
+          }
+        }),
+      );
+
+      if (invalidTokens.length > 0) {
+        await supabase.from("push_subscriptions").delete().in("token", invalidTokens);
+      }
+
+      return new Response(
+        JSON.stringify({ ok: true, mode: "test", sent, total: tokens.length, invalidRemoved: invalidTokens.length, errors }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
+      );
+    }
 
     let orderData: {
       id: string;
@@ -92,7 +216,8 @@ Deno.serve(async (req) => {
         JSON.stringify({ ok: false, error: "Pedido não encontrado." }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 },
       );
-    }    const { type, newStatus } = body;
+    }
+    const { type, newStatus } = body;
     const finalOrderId = body.orderId || orderData.id;
     const safeShort = shortIdFromUuid(finalOrderId);
     const finalTotalPrice = body.totalPrice || orderData.total_price || 0;
