@@ -1,8 +1,8 @@
-const CACHE_NAME = 'hotdog-viviane-cache-v668';
+const CACHE_NAME = 'hotdog-viviane-cache-v669';
 const ASSETS_TO_CACHE = [
     './',
-    './styles.css?v=668',
-    './script.js?v=668',
+    './styles.css?v=669',
+    './script.js?v=669',
     './img/logo_hotdog_viviane.png'
 ];
 
@@ -69,26 +69,6 @@ self.addEventListener('push', (event) => {
 
     event.waitUntil(self.registration.showNotification(title, options));
 });
-
-// ============================================
-// FIREBASE MESSAGING (PUSH NOTIFICATIONS)
-// ============================================
-try {
-    importScripts('https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js');
-    importScripts('https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js');
-
-    firebase.initializeApp({
-        apiKey: "AIzaSyBDFLMd9nWbBcUVssT4CIEuFxQCzACDUgI",
-        authDomain: "hotdogviviane.firebaseapp.com",
-        projectId: "hotdogviviane",
-        storageBucket: "hotdogviviane.firebasestorage.app",
-        messagingSenderId: "1064167764931",
-        appId: "1:1064167764931:web:c33d93a61598f22074c376",
-        measurementId: "G-XHHY8FVFZ3"
-    });
-} catch (e) {
-    console.error('[sw.js] Firebase Messaging falhou no Service Worker:', e);
-}
 
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
