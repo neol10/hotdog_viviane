@@ -174,11 +174,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // AUTENTICAÇÃO
 async function checkSession() {
+    if (!dbClient) return;
     const { data: { session } } = await dbClient.auth.getSession();
+    handleSessionChange(session);
+
+    // Escuta mudanças de autenticação
+    dbClient.auth.onAuthStateChange((event, session) => {
+        console.log('Comanda - Sessão alterada:', event);
+        handleSessionChange(session);
+    });
+}
+
+function handleSessionChange(session) {
+    const loginScreen = document.getElementById('login-screen');
+    const dashboard = document.getElementById('comanda-dashboard');
+
     if (session) {
-        showKdsDashboard();
+        if (loginScreen) loginScreen.style.display = 'none';
+        if (dashboard) dashboard.style.display = 'block';
+        
+        // Só inicializa o dashboard se não estiver preenchido
+        if (kdsOrders.length === 0) {
+            showKdsDashboard();
+        }
     } else {
-        showLoginScreen();
+        if (loginScreen) loginScreen.style.display = 'flex';
+        if (dashboard) dashboard.style.display = 'none';
     }
 }
 

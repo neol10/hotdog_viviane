@@ -611,16 +611,35 @@ async function checkManualLogin() {
 }
 
 async function checkLogin() {
+    if (!dbClient) return;
     const { data: { session } } = await dbClient.auth.getSession();
+    handleSessionChange(session);
+
+    // Escuta mudanças de autenticação (ex: deslogar em outra aba)
+    dbClient.auth.onAuthStateChange((event, session) => {
+        console.log('Sessão alterada:', event);
+        handleSessionChange(session);
+    });
+}
+
+function handleSessionChange(session) {
+    const overlay = document.getElementById('login-overlay');
+    const wrapper = document.getElementById('admin-wrapper');
+
     if (session) {
         localStorage.setItem('hotdog_admin_logged', 'true');
-        const overlay = document.getElementById('login-overlay');
         if (overlay) overlay.style.display = 'none';
-        const wrapper = document.getElementById('admin-wrapper');
         if (wrapper) wrapper.style.display = 'block';
-        initAdmin();
+        
+        // Só inicializa se for a primeira vez ou se as abas estiverem vazias
+        if (isInitialLoad) {
+            isInitialLoad = false;
+            initAdmin();
+        }
     } else {
         localStorage.removeItem('hotdog_admin_logged');
+        if (overlay) overlay.style.display = 'flex';
+        if (wrapper) wrapper.style.display = 'none';
     }
 }
 
@@ -631,8 +650,13 @@ addSafeListener('btn-logout', 'click', async () => {
     }
     await dbClient.auth.signOut();
     localStorage.removeItem('hotdog_admin_logged');
-    location.reload();
+    // location.reload(); // O onAuthStateChange já vai tratar de mostrar o login
 });
 
 // Auto-init
-setTimeout(checkLogin, 100);
+if (dbClient) {
+    checkLogin();
+} else {
+    // Caso o script do Supabase demore a carregar
+    window.addEventListener('load', checkLogin);
+}
