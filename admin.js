@@ -136,15 +136,29 @@ async function saveAdminFcmToken(token) {
     console.warn('Não foi possível salvar token FCM admin:', error.message);
 }
 
-async function ensureAdminFcmSubscription() {
+async function ensureAdminFcmSubscription(force = false) {
     if (!('Notification' in window)) return;
     const { data: { session } } = await dbClient.auth.getSession();
     if (!session || !session.user) return;
 
     let permission = Notification.permission;
-    if (permission === 'default') {
+    if (force && permission === 'default') {
         permission = await Notification.requestPermission();
     }
+    
+    // Atualiza ícone do sino se já tiver permissão
+    const btnNotif = document.getElementById('btn-notif-admin');
+    if (btnNotif) {
+        if (permission === 'granted') {
+            btnNotif.style.color = '#fbbf24'; // Amarelo/Dourado se ativo
+            btnNotif.title = 'Notificações Ativas';
+            btnNotif.querySelector('i').className = 'ph-fill ph-bell-ringing';
+        } else if (permission === 'denied') {
+            btnNotif.style.color = '#ef4444'; // Vermelho se bloqueado
+            btnNotif.title = 'Notificações Bloqueadas';
+        }
+    }
+
     if (permission !== 'granted') return;
 
     const messaging = await initAdminFirebaseMessaging();
@@ -625,6 +639,13 @@ addSafeListener('close-modal-coupon', 'click', () => document.getElementById('mo
 addSafeListener('btn-new-product', 'click', () => window.openProductModal());
 addSafeListener('btn-new-category', 'click', () => window.openCategoryModal());
 addSafeListener('btn-new-coupon', 'click', () => window.openCouponModal());
+addSafeListener('btn-notif-admin', 'click', () => {
+    ensureAdminFcmSubscription(true).then(() => {
+        if (Notification.permission === 'granted') {
+            alert("✅ Notificações ativadas para este administrador!");
+        }
+    });
+});
 
 // Máscara de preço do produto
 addSafeListener('prod-price', 'input', (e) => {

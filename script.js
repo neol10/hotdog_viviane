@@ -52,11 +52,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const navLinks = document.querySelectorAll('.category-link');
 
         window.addEventListener('scroll', () => {
-            const navbar = document.querySelector('.navbar');
-            if (window.scrollY > 30) {
-                if (navbar) navbar.classList.add('navbar-hidden');
+            if (window.scrollY > 60) {
+                document.body.classList.add('nav-is-hidden');
             } else {
-                if (navbar) navbar.classList.remove('navbar-hidden');
+                document.body.classList.remove('nav-is-hidden');
             }
 
             let current = '';

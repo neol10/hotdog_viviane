@@ -27,6 +27,7 @@
     --radius-lg: 16px;
     --radius-md: 12px;
     --radius-full: 9999px;
+    --nav-height: 80px;
 
     /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -91,6 +92,7 @@ body {
     position: fixed;
     top: 0;
     width: 100%;
+    height: var(--nav-height);
     z-index: 1000;
     background: rgba(10, 14, 23, 0.7);
     backdrop-filter: blur(16px);
@@ -99,7 +101,7 @@ body {
     transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.4s;
 }
 
-.navbar.navbar-hidden {
+body.nav-is-hidden .navbar {
     transform: translateY(-120%);
     opacity: 0;
     pointer-events: none;
@@ -518,7 +520,7 @@ body {
     gap: 1rem;
     padding: 1rem;
     position: sticky;
-    top: 5px; /* grudado ao teto via sticky */
+    top: var(--nav-height); /* grudado abaixo do navbar fixo */
     z-index: 900;
     background: rgba(10, 14, 23, 0.85);
     backdrop-filter: blur(12px);
@@ -527,7 +529,11 @@ body {
     border-top: 1px solid var(--border-color);
     overflow-x: auto;
     scrollbar-width: none;
-    /* Firefox */
+    transition: top 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+body.nav-is-hidden .category-nav {
+    top: 10px; /* Pouco mais próximo do topo quando header some */
 }
 
 .category-nav::-webkit-scrollbar {

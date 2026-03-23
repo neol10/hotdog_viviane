@@ -104,25 +104,35 @@ self.addEventListener('push', (event) => {
     // event.waitUntil garante que o Service Worker não morra antes de mostrar a notificação
     event.waitUntil(
         self.registration.showNotification(title, options)
+            .then(() => console.log('[SW] Notificação exibida com sucesso.'))
             .catch(err => console.error('[SW] Erro ao mostrar notificação:', err))
     );
 });
 
 self.addEventListener('notificationclick', (event) => {
+    console.log('[SW] Clique na notificação detectado.');
     event.notification.close();
-    const targetUrl = (event.notification.data && event.notification.data.url) || '/comanda.html';
+
+    const urlToOpen = (event.notification.data && event.notification.data.url) || '/comanda.html';
+    const absoluteUrlToOpen = new URL(urlToOpen, self.location.origin).href;
 
     event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-            for (const client of clientList) {
-                if (client.url.includes(targetUrl) && 'focus' in client) {
+        clients.matchAll({
+            type: 'window',
+            includeUncontrolled: true
+        }).then((windowClients) => {
+            // Se já houver uma aba aberta no destino, foca nela
+            for (let i = 0; i < windowClients.length; i++) {
+                const client = windowClients[i];
+                if (client && typeof client.url === 'string' && client.url.includes(absoluteUrlToOpen) && 'focus' in client) {
                     return client.focus();
                 }
             }
+
+            // Caso contrário, abre uma nova aba na URL alvo
             if (clients.openWindow) {
-                return clients.openWindow(targetUrl);
+                return clients.openWindow(absoluteUrlToOpen);
             }
-            return null;
         })
     );
 });
