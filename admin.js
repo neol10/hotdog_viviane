@@ -52,6 +52,14 @@ function initAdmin() {
     }
 }
 
+function ensureDbClient() {
+    if (dbClient) return dbClient;
+    if (window.supabase) {
+        dbClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+    }
+    return dbClient;
+}
+
 async function initAdminFirebaseMessaging() {
     if (adminFirebaseMessaging) return adminFirebaseMessaging;
     if (!window.firebase || !window.firebaseWebConfig || !('serviceWorker' in navigator)) return null;
@@ -611,7 +619,15 @@ async function checkManualLogin() {
 }
 
 async function checkLogin() {
-    if (!dbClient) return;
+    ensureDbClient();
+    if (!dbClient) {
+        // Fallback: se o Supabase não carregou, não deixa a tela vazia
+        const overlay = document.getElementById('login-overlay');
+        const wrapper = document.getElementById('admin-wrapper');
+        if (overlay) overlay.style.display = 'flex';
+        if (wrapper) wrapper.style.display = 'none';
+        return;
+    }
     const { data: { session } } = await dbClient.auth.getSession();
     handleSessionChange(session);
 
@@ -654,9 +670,6 @@ addSafeListener('btn-logout', 'click', async () => {
 });
 
 // Auto-init
-if (dbClient) {
-    checkLogin();
-} else {
-    // Caso o script do Supabase demore a carregar
-    window.addEventListener('load', checkLogin);
-}
+checkLogin();
+// Caso o script do Supabase demore a carregar
+window.addEventListener('load', checkLogin);
