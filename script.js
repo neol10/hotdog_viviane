@@ -1574,6 +1574,75 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ==========================================
 let clientFcmToken = null;
 
+function isPushRlsError(error) {
+    if (!error) return false;
+    const status = Number(error.status || 0);
+    const code = String(error.code || '');
+    return status === 401 || status === 403 || code === '42501';
+}
+
+async function registerPushTokenViaFunction(payload, supabaseUrl, supabaseKey) {
+    try {
+        const res = await fetch(`${supabaseUrl}/functions/v1/send-order-push`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': supabaseKey,
+                'Authorization': `Bearer ${supabaseKey}`
+            },
+            body: JSON.stringify({
+                type: 'register_token',
+                token: payload.token,
+                role: payload.role,
+                userId: payload.user_id || null,
+                userAgent: payload.user_agent || null,
+                isActive: payload.is_active !== false
+            })
+        });
+
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok || !body.ok) {
+            return {
+                ok: false,
+                error: {
+                    status: res.status,
+                    message: (body && (body.error || body.message)) || `HTTP ${res.status}`
+                }
+            };
+        }
+
+        return { ok: true };
+    } catch (e) {
+        return {
+            ok: false,
+            error: {
+                status: 0,
+                message: String((e && e.message) || e)
+            }
+        };
+    }
+}
+
+async function savePushSubscription(payload, supabaseClient, supabaseUrl, supabaseKey, options = {}) {
+    const upsertOptions = {
+        onConflict: 'token',
+        ignoreDuplicates: !!options.ignoreDuplicates
+    };
+
+    const { error } = await supabaseClient
+        .from('push_subscriptions')
+        .upsert(payload, upsertOptions);
+
+    if (!error) return { ok: true };
+    if (!isPushRlsError(error)) return { ok: false, error };
+
+    // Fallback: grava via Edge Function com service role quando a policy RLS bloquear no client.
+    const fallback = await registerPushTokenViaFunction(payload, supabaseUrl, supabaseKey);
+    if (fallback.ok) return { ok: true, via: 'function' };
+
+    return { ok: false, error: fallback.error || error };
+}
+
 window.ensureCustomerFcmSubscription = async function() {
     if (!('Notification' in window) || !window.firebase || !('serviceWorker' in navigator)) return;
 
@@ -1615,40 +1684,32 @@ window.ensureCustomerFcmSubscription = async function() {
                 is_active: true,
                 updated_at: new Date().toISOString()
             };
-            
-            // Para anon/customer: NÃO podemos fazer update se o token já existir com user_id/role diferente.
-            // Então usamos "ignoreDuplicates" para não tentar atualizar em caso de conflito.
-            const { error: upsertErr } = await supabaseClient
-                .from('push_subscriptions')
-                .upsert(payload, { onConflict: 'token', ignoreDuplicates: true });
 
-            // Se já existia como customer, fazemos um update "seguro" (só quando a linha é customer e user_id null)
-            // para manter user_agent/is_active/updated_at atualizados.
-            const { error: updateErr } = await supabaseClient
-                .from('push_subscriptions')
-                .update({
-                    user_agent: payload.user_agent,
-                    is_active: true,
-                    updated_at: payload.updated_at
-                })
-                .eq('token', token)
-                .eq('role', 'customer')
-                .is('user_id', null);
+            const saveResult = await savePushSubscription(
+                payload,
+                supabaseClient,
+                supabaseUrl,
+                supabaseKey,
+                { ignoreDuplicates: true }
+            );
 
-            const error = upsertErr || updateErr;
-            if (error) {
+            if (!saveResult.ok) {
                 alert('Não foi possível salvar seu token de notificação (Supabase). Veja o Console (F12).');
                 console.warn('Erro Supabase upsert push_subscriptions (customer):', {
-                    status: error.status,
-                    code: error.code,
-                    message: error.message,
-                    details: error.details,
-                    hint: error.hint
+                    status: saveResult.error && saveResult.error.status,
+                    code: saveResult.error && saveResult.error.code,
+                    message: saveResult.error && saveResult.error.message,
+                    details: saveResult.error && saveResult.error.details,
+                    hint: saveResult.error && saveResult.error.hint
                 });
                 return false;
             }
             localStorage.setItem('hotdog_fcm_token_customer', token);
-            console.log("Token FCM Cliente registrado.");
+            if (saveResult.via === 'function') {
+                console.log('Token FCM Cliente registrado (fallback via Edge Function).');
+            } else {
+                console.log('Token FCM Cliente registrado.');
+            }
             return true;
         }
     } catch (e) {
@@ -1734,29 +1795,60 @@ window.enableTopbarNotifications = async function() {
             is_active: true,
             updated_at: new Date().toISOString()
         };
-        const { error } = await supabaseClient.from('push_subscriptions').upsert(payload, { onConflict: 'token' });
-        if (error) {
+        const saveResult = await savePushSubscription(payload, supabaseClient, supabaseUrl, supabaseKey);
+        if (!saveResult.ok) {
             alert('Não foi possível salvar token do Admin (Supabase). Veja o Console (F12).');
             console.warn('Erro Supabase upsert push_subscriptions (admin):', {
-                status: error.status,
-                code: error.code,
-                message: error.message,
-                details: error.details,
-                hint: error.hint
+                status: saveResult.error && saveResult.error.status,
+                code: saveResult.error && saveResult.error.code,
+                message: saveResult.error && saveResult.error.message,
+                details: saveResult.error && saveResult.error.details,
+                hint: saveResult.error && saveResult.error.hint
             });
             return;
         }
         localStorage.setItem('hotdog_fcm_token_admin', token);
-        console.log('Token FCM Admin registrado (via topo).');
+        if (saveResult.via === 'function') {
+            console.log('Token FCM Admin registrado (via topo, fallback Edge Function).');
+        } else {
+            console.log('Token FCM Admin registrado (via topo).');
+        }
         alert('✅ Notificações ativadas (Admin)!');
         return;
     }
 
-    // Caso não seja admin logado, registra como cliente
-    const ok = await window.ensureCustomerFcmSubscription();
-    if (ok) {
-        alert('✅ Notificações ativadas!');
+    const payload = {
+        token: token,
+        role: 'customer',
+        user_agent: navigator.userAgent,
+        is_active: true,
+        updated_at: new Date().toISOString()
+    };
+    const saveResult = await savePushSubscription(
+        payload,
+        supabaseClient,
+        supabaseUrl,
+        supabaseKey,
+        { ignoreDuplicates: true }
+    );
+    if (!saveResult.ok) {
+        alert('Não foi possível salvar token de notificação (Supabase). Veja o Console (F12).');
+        console.warn('Erro Supabase upsert push_subscriptions (customer/topo):', {
+            status: saveResult.error && saveResult.error.status,
+            code: saveResult.error && saveResult.error.code,
+            message: saveResult.error && saveResult.error.message,
+            details: saveResult.error && saveResult.error.details,
+            hint: saveResult.error && saveResult.error.hint
+        });
+        return;
     }
+    localStorage.setItem('hotdog_fcm_token_customer', token);
+    if (saveResult.via === 'function') {
+        console.log('Token FCM Cliente registrado (via topo, fallback Edge Function).');
+    } else {
+        console.log('Token FCM Cliente registrado (via topo).');
+    }
+    alert('✅ Notificações ativadas!');
 };
 
 // Garantir que AudioContext seja retomado no mobile

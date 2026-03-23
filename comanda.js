@@ -47,6 +47,39 @@ let firebaseSwRegistration = null;
 let currentFcmToken = null;
 const updatingOrders = new Set();
 
+function isPushRlsError(error) {
+    if (!error) return false;
+    const status = Number(error.status || 0);
+    const code = String(error.code || '');
+    return status === 401 || status === 403 || code === '42501';
+}
+
+async function registerPushTokenViaFunction(payload) {
+    try {
+        const res = await fetch(`${supabaseUrl}/functions/v1/send-order-push`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': supabaseKey,
+                'Authorization': `Bearer ${supabaseKey}`
+            },
+            body: JSON.stringify({
+                type: 'register_token',
+                token: payload.token,
+                role: payload.role,
+                userId: payload.user_id || null,
+                userAgent: payload.user_agent || null,
+                isActive: payload.is_active !== false
+            })
+        });
+
+        const body = await res.json().catch(() => ({}));
+        return res.ok && body && body.ok;
+    } catch (_) {
+        return false;
+    }
+}
+
 // ============================================
 // FUNÇÕES AUXILIARES
 // ============================================
@@ -130,9 +163,17 @@ async function saveFcmToken(token) {
     };
 
     const { error } = await dbClient.from('push_subscriptions').upsert(payload, { onConflict: 'token' });
-    if (error) {
-        console.warn('Não foi possível salvar token FCM no Supabase:', error.message);
+    if (!error) return;
+
+    if (isPushRlsError(error)) {
+        const ok = await registerPushTokenViaFunction(payload);
+        if (ok) {
+            console.log('Token FCM KDS registrado via fallback da Edge Function.');
+            return;
+        }
     }
+
+    console.warn('Não foi possível salvar token FCM no Supabase:', error.message);
 }
 
 async function ensureFcmSubscription() {

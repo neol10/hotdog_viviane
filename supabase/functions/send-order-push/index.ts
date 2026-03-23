@@ -16,6 +16,9 @@ type PushPayload = {
   newStatus?: string;
   role?: "kds" | "admin" | "customer" | "all";
   token?: string;
+  userId?: string | null;
+  userAgent?: string | null;
+  isActive?: boolean;
   test?: boolean;
 };
 
@@ -160,6 +163,54 @@ Deno.serve(async (req) => {
 
       return new Response(
         JSON.stringify({ ok: true, mode: "test", sent, total: tokens.length, invalidRemoved: invalidTokens.length, errors }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
+      );
+    }
+
+    // =====================================
+    // MODO REGISTRO DE TOKEN (fallback RLS)
+    // =====================================
+    if (body.type === "register_token") {
+      const token = String(body.token || "").trim();
+      const role = body.role || "customer";
+      const allowedRoles = ["customer", "admin", "kds"];
+
+      if (token.length < 20) {
+        return new Response(
+          JSON.stringify({ ok: false, error: "Token inválido para registro." }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 },
+        );
+      }
+
+      if (!allowedRoles.includes(role)) {
+        return new Response(
+          JSON.stringify({ ok: false, error: "Role inválida para registro de token." }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 },
+        );
+      }
+
+      const payload: Record<string, unknown> = {
+        token,
+        role,
+        user_agent: body.userAgent || null,
+        is_active: body.isActive !== false,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (body.userId) {
+        payload.user_id = body.userId;
+      }
+
+      const { error: registerErr } = await supabase
+        .from("push_subscriptions")
+        .upsert(payload, { onConflict: "token" });
+
+      if (registerErr) {
+        throw new Error(`Erro ao registrar token push: ${registerErr.message}`);
+      }
+
+      return new Response(
+        JSON.stringify({ ok: true, mode: "register_token" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
       );
     }
