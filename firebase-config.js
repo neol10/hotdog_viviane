@@ -9,7 +9,7 @@
         measurementId: "G-XHHY8FVFZ3"
     };
 
-    const defaultVapidKey = "BCF_IOPmGXH7D2-EsZxAHHQJxDZVWvkcXHke4nRfNus_P5dmdLsCIPybZStlF656s6OFsbm1weCAZVB80GzKMs";
+    const defaultVapidKey = "BCF__lOPmGXH7D2-EsZxAHHQJxDZWVvkcXHke4nRfNus_P5dmdLsClPYbZStLF656s60Fsbm1weCAZVB8OGzKMs";
     let overrideVapidKey = null;
     try {
         overrideVapidKey = localStorage.getItem('hotdog_firebase_vapid');
