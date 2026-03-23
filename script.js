@@ -1767,8 +1767,10 @@ window.ensureCustomerFcmSubscription = async function() {
                 return true;
             }
             localStorage.setItem('hotdog_fcm_token_customer', token);
-            console.log('Token FCM Cliente registrado (Edge Function).');
+            console.log('[FCM] Token Cliente registrado com sucesso (Edge Function).');
             return true;
+        } else {
+            console.log('[FCM] Token já estava registrado ou é idêntico ao salvo localmente.');
         }
     } catch (e) {
         console.warn("Erro ao registrar FCM do cliente:", e);
@@ -1934,11 +1936,15 @@ function checkNotificationStatus() {
     if (!btn) return;
 
     if ("Notification" in window) {
+        // Só mostra o botão se a permissão for 'default' (ainda não perguntado)
+        // Se for 'granted', já temos permissão. Se for 'denied', o botão não adianta (precisa ajuste manual).
         if (Notification.permission === 'default') {
             btn.style.display = 'block';
         } else {
             btn.style.display = 'none';
         }
+    } else {
+        btn.style.display = 'none';
     }
 }
 

@@ -110,12 +110,27 @@ Deno.serve(async (req) => {
                   message: {
                     token,
                     data: {
-                      title: messageTitle,
-                      body: messageBody,
+                      title: String(messageTitle),
+                      body: String(messageBody),
                       url: "/",
                       click_action: "/",
                     },
                     webpush: {
+                      headers: {
+                        Urgency: "high",
+                      },
+                      notification: {
+                        title: messageTitle,
+                        body: messageBody,
+                        icon: "/img/logo_hotdog_viviane.png",
+                        badge: "/img/logo_hotdog_viviane.png",
+                      },
+                      data: {
+                        title: String(messageTitle),
+                        body: String(messageBody),
+                        url: "/",
+                        click_action: "/",
+                      },
                       fcm_options: {
                         link: "/",
                       },
@@ -336,9 +351,9 @@ Deno.serve(async (req) => {
                   data: {
                     orderId: String(finalOrderId),
                     shortId: String(safeShort),
-                      title: messageTitle,
-                      body: messageBody,
-                      url: "/comanda.html",
+                    title: String(messageTitle),
+                    body: String(messageBody),
+                    url: "/comanda.html",
                     click_action: "/comanda.html",
                   },
                   webpush: {

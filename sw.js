@@ -52,10 +52,13 @@ self.addEventListener('fetch', (event) => {
 // (não depende de importScripts externos; evita falha de update do SW)
 // ============================================
 self.addEventListener('push', (event) => {
+    console.log('[SW] Evento Push recebido.');
+    
     let payload = {};
     try {
         payload = event.data ? event.data.json() : {};
     } catch (e) {
+        console.warn('[SW] Falha ao parsear JSON do push:', e);
         try {
             payload = { data: { body: event.data ? event.data.text() : '' } };
         } catch {
@@ -63,29 +66,46 @@ self.addEventListener('push', (event) => {
         }
     }
 
-    const notif = payload && payload.notification ? payload.notification : {};
-    const data = payload && payload.data ? payload.data : {};
+    console.log('[SW] Payload processado:', payload);
 
+    // Estrutura FCM v1: pode vir em payload.notification ou payload.data
+    // Também tratamos se vier dentro de payload.message (raro mas possível em alguns envios manuais)
+    const msg = payload.message || payload;
+    const notif = msg.notification || {};
+    const data = msg.data || {};
+
+    const title = notif.title || data.title || '🌭 Novo Pedido';
+    const body = notif.body || data.body || 'Chegou um novo pedido no Hotdog Viviane.';
+    
     const clickUrl =
         data.url ||
         data.click_action ||
-        (payload && payload.fcmOptions && payload.fcmOptions.link) ||
-        (payload && payload.fcm_options && payload.fcm_options.link) ||
+        (msg.fcmOptions && msg.fcmOptions.link) ||
+        (msg.fcm_options && msg.fcm_options.link) ||
         notif.click_action ||
         '/comanda.html';
 
-    const title = notif.title || data.title || '🌭 Novo Pedido';
+    // Para ícones, o Android prefere caminhos que ele consiga resolver. 
+    // Se o SW está na raiz, 'img/...' funciona, mas vamos garantir o origin.
+    const icon = self.location.origin + '/img/logo_hotdog_viviane.png';
+
     const options = {
-        body: notif.body || data.body || 'Chegou um novo pedido no Hotdog Viviane.',
-        icon: 'img/logo_hotdog_viviane.png',
-        badge: 'img/logo_hotdog_viviane.png',
+        body: body,
+        icon: icon,
+        badge: icon,
         vibrate: [200, 100, 200],
+        tag: 'hotdog-viviane-push', // Evita múltiplas notificações iguais acumuladas
+        renotify: true,
         data: {
             url: clickUrl
         }
     };
 
-    event.waitUntil(self.registration.showNotification(title, options));
+    // event.waitUntil garante que o Service Worker não morra antes de mostrar a notificação
+    event.waitUntil(
+        self.registration.showNotification(title, options)
+            .catch(err => console.error('[SW] Erro ao mostrar notificação:', err))
+    );
 });
 
 self.addEventListener('notificationclick', (event) => {

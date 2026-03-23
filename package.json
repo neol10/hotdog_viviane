@@ -4,5 +4,8 @@
   },
   "dependencies": {
     "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "supabase": "^2.83.0"
   }
 }
