@@ -1619,8 +1619,14 @@ window.ensureCustomerFcmSubscription = async function() {
             // Tenta salvar (exige que a RLS permita anon insert em push_subscriptions)
             const { error } = await supabaseClient.from('push_subscriptions').upsert(payload, { onConflict: 'token' });
             if (error) {
-                alert('Não foi possível salvar seu token de notificação (Supabase/RLS).');
-                console.warn('Erro Supabase upsert push_subscriptions (customer):', error);
+                alert('Não foi possível salvar seu token de notificação (Supabase). Veja o Console (F12).');
+                console.warn('Erro Supabase upsert push_subscriptions (customer):', {
+                    status: error.status,
+                    code: error.code,
+                    message: error.message,
+                    details: error.details,
+                    hint: error.hint
+                });
                 return false;
             }
             localStorage.setItem('hotdog_fcm_token_customer', token);
@@ -1712,8 +1718,14 @@ window.enableTopbarNotifications = async function() {
         };
         const { error } = await supabaseClient.from('push_subscriptions').upsert(payload, { onConflict: 'token' });
         if (error) {
-            alert('Não foi possível salvar token do Admin (Supabase/RLS).');
-            console.warn('Erro Supabase upsert push_subscriptions (admin):', error);
+            alert('Não foi possível salvar token do Admin (Supabase). Veja o Console (F12).');
+            console.warn('Erro Supabase upsert push_subscriptions (admin):', {
+                status: error.status,
+                code: error.code,
+                message: error.message,
+                details: error.details,
+                hint: error.hint
+            });
             return;
         }
         localStorage.setItem('hotdog_fcm_token_admin', token);

@@ -1,8 +1,8 @@
-const CACHE_NAME = 'hotdog-viviane-cache-v669';
+const CACHE_NAME = 'hotdog-viviane-cache-v670';
 const ASSETS_TO_CACHE = [
     './',
-    './styles.css?v=669',
-    './script.js?v=669',
+    './styles.css?v=670',
+    './script.js?v=670',
     './img/logo_hotdog_viviane.png'
 ];
 
@@ -25,13 +25,22 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
     const url = event.request.url;
+    if (event.request.method !== 'GET') return;
     if (url.includes('supabase.co')) return;
 
     event.respondWith(
         fetch(event.request)
             .then((response) => {
-                const cloned = response.clone();
-                caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
+                // Só cacheia respostas ok e do mesmo origin (evita cachear opaque/externos)
+                try {
+                    const reqUrl = new URL(event.request.url);
+                    if (response && response.ok && reqUrl.origin === self.location.origin) {
+                        const cloned = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
+                    }
+                } catch (e) {
+                    // ignora problemas de cache; nunca deve quebrar a navegação
+                }
                 return response;
             })
             .catch(() => caches.match(event.request))
