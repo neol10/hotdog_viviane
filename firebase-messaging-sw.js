@@ -21,7 +21,7 @@ messaging.onBackgroundMessage((payload) => {
         icon: 'img/logo_hotdog_viviane.png',
         badge: 'img/logo_hotdog_viviane.png',
         data: {
-            url: '/comanda'
+            url: '/comanda.html'
         }
     };
 
@@ -30,12 +30,12 @@ messaging.onBackgroundMessage((payload) => {
 
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
-    const targetUrl = (event.notification.data && event.notification.data.url) || '/comanda';
+    const targetUrl = (event.notification.data && event.notification.data.url) || '/comanda.html';
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
             for (const client of clientList) {
-                if (client.url.includes('/comanda') && 'focus' in client) {
+                if (client.url.includes('/comanda.html') && 'focus' in client) {
                     return client.focus();
                 }
             }

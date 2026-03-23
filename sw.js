@@ -1,8 +1,8 @@
-const CACHE_NAME = 'hotdog-viviane-cache-v670';
+const CACHE_NAME = 'hotdog-viviane-cache-v671';
 const ASSETS_TO_CACHE = [
     './',
-    './styles.css?v=670',
-    './script.js?v=670',
+    './styles.css?v=671',
+    './script.js?v=671',
     './img/logo_hotdog_viviane.png'
 ];
 
@@ -65,6 +65,14 @@ self.addEventListener('push', (event) => {
     const notif = payload && payload.notification ? payload.notification : {};
     const data = payload && payload.data ? payload.data : {};
 
+    const clickUrl =
+        data.url ||
+        data.click_action ||
+        (payload && payload.fcmOptions && payload.fcmOptions.link) ||
+        (payload && payload.fcm_options && payload.fcm_options.link) ||
+        notif.click_action ||
+        '/comanda.html';
+
     const title = notif.title || data.title || '🌭 Novo Pedido';
     const options = {
         body: notif.body || data.body || 'Chegou um novo pedido no Hotdog Viviane.',
@@ -72,7 +80,7 @@ self.addEventListener('push', (event) => {
         badge: 'img/logo_hotdog_viviane.png',
         vibrate: [200, 100, 200],
         data: {
-            url: data.url || data.click_action || '/comanda.html'
+            url: clickUrl
         }
     };
 

@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const supabase = window.supabase ? window.supabase.createClient(supabaseUrl, supabaseKey) : null;
     // Expor para funções globais (fora do DOMContentLoaded)
     window.hotdogSupabaseClient = supabase;
+    window.hotdogSupabaseUrl = supabaseUrl;
+    window.hotdogSupabaseKey = supabaseKey;
 
     // Sino do topo (ativar notificações)
     const headerNotifBtn = document.getElementById('header-notif-btn');
@@ -1289,16 +1291,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                     };
 
                     let insertedOrder = null;
+                    const deliveryFeeNumber = Number(deliveryFee) || 0;
                     let { error: insertError } = await supabase
                         .from('orders')
-                        .insert([{ ...orderPayloadBase, delivery_fee: deliveryFee }]);
+                        .insert([{ ...orderPayloadBase, delivery_fee: deliveryFeeNumber }]);
 
                     // Compatibilidade com bancos antigos sem a coluna delivery_fee
-                    if (insertError && (insertError.message || '').toLowerCase().includes('delivery_fee')) {
+                    if (insertError) {
+                        const insertErrText = [insertError.message, insertError.details, insertError.hint]
+                            .filter(Boolean)
+                            .join(' ')
+                            .toLowerCase();
+
+                        if (insertErrText.includes('delivery_fee') || insertErrText.includes('delivery fee')) {
                         const retry = await supabase
                             .from('orders')
                             .insert([orderPayloadBase]);
                         insertError = retry.error;
+                        }
                     }
 
                     if (insertError) {
@@ -1688,8 +1698,8 @@ window.ensureCustomerFcmSubscription = async function() {
             const saveResult = await savePushSubscription(
                 payload,
                 supabaseClient,
-                supabaseUrl,
-                supabaseKey,
+                window.hotdogSupabaseUrl,
+                window.hotdogSupabaseKey,
                 { ignoreDuplicates: true }
             );
 
@@ -1795,7 +1805,7 @@ window.enableTopbarNotifications = async function() {
             is_active: true,
             updated_at: new Date().toISOString()
         };
-        const saveResult = await savePushSubscription(payload, supabaseClient, supabaseUrl, supabaseKey);
+        const saveResult = await savePushSubscription(payload, supabaseClient, window.hotdogSupabaseUrl, window.hotdogSupabaseKey);
         if (!saveResult.ok) {
             alert('Não foi possível salvar token do Admin (Supabase). Veja o Console (F12).');
             console.warn('Erro Supabase upsert push_subscriptions (admin):', {
@@ -1827,8 +1837,8 @@ window.enableTopbarNotifications = async function() {
     const saveResult = await savePushSubscription(
         payload,
         supabaseClient,
-        supabaseUrl,
-        supabaseKey,
+        window.hotdogSupabaseUrl,
+        window.hotdogSupabaseKey,
         { ignoreDuplicates: true }
     );
     if (!saveResult.ok) {
