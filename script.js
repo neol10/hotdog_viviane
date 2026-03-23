@@ -1695,31 +1695,34 @@ window.ensureCustomerFcmSubscription = async function() {
                 updated_at: new Date().toISOString()
             };
 
-            const saveResult = await savePushSubscription(
-                payload,
-                supabaseClient,
-                window.hotdogSupabaseUrl,
-                window.hotdogSupabaseKey,
-                { ignoreDuplicates: true }
-            );
-
-            if (!saveResult.ok) {
-                alert('Não foi possível salvar seu token de notificação (Supabase). Veja o Console (F12).');
-                console.warn('Erro Supabase upsert push_subscriptions (customer):', {
-                    status: saveResult.error && saveResult.error.status,
-                    code: saveResult.error && saveResult.error.code,
-                    message: saveResult.error && saveResult.error.message,
-                    details: saveResult.error && saveResult.error.details,
-                    hint: saveResult.error && saveResult.error.hint
-                });
-                return false;
+            // Cliente (anon): evita tentar gravar no Supabase direto (RLS costuma bloquear e gera 401 no Console).
+            const fnResult = await registerPushTokenViaFunction(payload, window.hotdogSupabaseUrl, window.hotdogSupabaseKey);
+            if (!fnResult.ok) {
+                // Se falhar, tenta o caminho antigo como fallback (caso a policy tenha sido aberta)
+                const saveResult = await savePushSubscription(
+                    payload,
+                    supabaseClient,
+                    window.hotdogSupabaseUrl,
+                    window.hotdogSupabaseKey,
+                    { ignoreDuplicates: true }
+                );
+                if (!saveResult.ok) {
+                    alert('Não foi possível salvar seu token de notificação (Supabase). Veja o Console (F12).');
+                    console.warn('Erro ao salvar token push (customer):', {
+                        status: saveResult.error && saveResult.error.status,
+                        code: saveResult.error && saveResult.error.code,
+                        message: saveResult.error && saveResult.error.message,
+                        details: saveResult.error && saveResult.error.details,
+                        hint: saveResult.error && saveResult.error.hint
+                    });
+                    return false;
+                }
+                localStorage.setItem('hotdog_fcm_token_customer', token);
+                console.log('Token FCM Cliente registrado.');
+                return true;
             }
             localStorage.setItem('hotdog_fcm_token_customer', token);
-            if (saveResult.via === 'function') {
-                console.log('Token FCM Cliente registrado (fallback via Edge Function).');
-            } else {
-                console.log('Token FCM Cliente registrado.');
-            }
+            console.log('Token FCM Cliente registrado (Edge Function).');
             return true;
         }
     } catch (e) {
@@ -1834,30 +1837,36 @@ window.enableTopbarNotifications = async function() {
         is_active: true,
         updated_at: new Date().toISOString()
     };
-    const saveResult = await savePushSubscription(
-        payload,
-        supabaseClient,
-        window.hotdogSupabaseUrl,
-        window.hotdogSupabaseKey,
-        { ignoreDuplicates: true }
-    );
-    if (!saveResult.ok) {
-        alert('Não foi possível salvar token de notificação (Supabase). Veja o Console (F12).');
-        console.warn('Erro Supabase upsert push_subscriptions (customer/topo):', {
-            status: saveResult.error && saveResult.error.status,
-            code: saveResult.error && saveResult.error.code,
-            message: saveResult.error && saveResult.error.message,
-            details: saveResult.error && saveResult.error.details,
-            hint: saveResult.error && saveResult.error.hint
-        });
+
+    // Cliente (anon): registra direto pela Edge Function para evitar 401 (RLS) no console.
+    const fnResult = await registerPushTokenViaFunction(payload, window.hotdogSupabaseUrl, window.hotdogSupabaseKey);
+    if (!fnResult.ok) {
+        // Se falhar, tenta o caminho antigo como fallback
+        const saveResult = await savePushSubscription(
+            payload,
+            supabaseClient,
+            window.hotdogSupabaseUrl,
+            window.hotdogSupabaseKey,
+            { ignoreDuplicates: true }
+        );
+        if (!saveResult.ok) {
+            alert('Não foi possível salvar token de notificação (Supabase). Veja o Console (F12).');
+            console.warn('Erro ao salvar token push (customer/topo):', {
+                status: saveResult.error && saveResult.error.status,
+                code: saveResult.error && saveResult.error.code,
+                message: saveResult.error && saveResult.error.message,
+                details: saveResult.error && saveResult.error.details,
+                hint: saveResult.error && saveResult.error.hint
+            });
+            return;
+        }
+        localStorage.setItem('hotdog_fcm_token_customer', token);
+        console.log('Token FCM Cliente registrado (via topo).');
+        alert('✅ Notificações ativadas!');
         return;
     }
     localStorage.setItem('hotdog_fcm_token_customer', token);
-    if (saveResult.via === 'function') {
-        console.log('Token FCM Cliente registrado (via topo, fallback Edge Function).');
-    } else {
-        console.log('Token FCM Cliente registrado (via topo).');
-    }
+    console.log('Token FCM Cliente registrado (via topo, Edge Function).');
     alert('✅ Notificações ativadas!');
 };
 
