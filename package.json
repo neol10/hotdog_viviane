@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "deploy": "git add . && git commit -m 'auto: deploy geral' && git push && npx supabase functions deploy send-order-push --project-ref mnygtmcwgkrkqluaqyfe --no-verify-jwt"
+  },
   "dependencies": {
     "node-fetch": "^2.7.0"
   }
