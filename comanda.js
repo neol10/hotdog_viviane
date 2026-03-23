@@ -20,9 +20,21 @@ const realtimeContainer = document.getElementById('realtime-status-container');
 // Som gerado via Web Audio API (sem arquivo externo)
 let audioCtx = null;
 function getAudioCtx() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
     return audioCtx;
 }
+
+// Desbloqueia áudio na primeira interação
+document.addEventListener('click', () => {
+    if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+}, { once: true });
 
 let isSoundEnabled = true;
 let kdsOrders = [];

@@ -1602,6 +1602,13 @@ window.ensureCustomerFcmSubscription = async function() {
     }
 };
 
+// Garantir que AudioContext seja retomado no mobile
+document.addEventListener('click', () => {
+    if (window.audioCtx && window.audioCtx.state === 'suspended') {
+        window.audioCtx.resume();
+    }
+}, { once: true });
+
 window.enableNotificationsUI = async function() {
     const btn = document.getElementById('notif-fab');
     if (btn) btn.style.display = 'none';

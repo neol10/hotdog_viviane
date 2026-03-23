@@ -92,15 +92,16 @@ Deno.serve(async (req) => {
         JSON.stringify({ ok: false, error: "Pedido não encontrado." }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 },
       );
-    }
+    }    const { type, newStatus } = body;
+    const finalOrderId = body.orderId || orderData.id;
+    const safeShort = shortIdFromUuid(finalOrderId);
+    const finalTotalPrice = body.totalPrice || orderData.total_price || 0;
 
-    const { orderId, customerId, totalPrice, deliveryType, type, newStatus } = body;
-
-    console.log('Recebido:', { orderId, customerId, totalPrice, deliveryType, type, newStatus })
+    console.log('Dados Processados:', { finalOrderId, safeShort, type, newStatus })
 
     let tokens: string[] = []
     let notificationTitle = "🍕 Novo Pedido!"
-    let notificationBody = `Chegou um novo pedido no valor de R$ ${totalPrice?.toFixed(2)}`
+    let notificationBody = `Pedido #${safeShort} no valor de R$ ${Number(finalTotalPrice).toFixed(2)}`
 
     // MODO 1: Notificar Cozinha/Admin sobre novo pedido
     if (!type || type === 'new_order') {
@@ -112,13 +113,10 @@ Deno.serve(async (req) => {
 
       if (subsError) throw subsError
       tokens = subs.map(s => s.token)
+      console.log(`Encontrados ${tokens.length} tokens para KDS/Admin`);
     } 
     // MODO 2: Notificar Cliente sobre mudança de status
     else if (type === 'status_update') {
-      // Busca o token do cliente associado ao pedido. 
-      // Como o cliente é anon, buscamos na tabela push_subscriptions com role='customer'
-      // Simplificação: enviamos para todos os tokens 'customer'. 
-      // Melhoria futura: filtrar por token específico do cliente se salvo no pedido.
       const { data: subs, error: subsError } = await supabase
         .from('push_subscriptions')
         .select('token')
@@ -127,15 +125,16 @@ Deno.serve(async (req) => {
 
       if (subsError) throw subsError
       tokens = subs.map(s => s.token)
+      console.log(`Encontrados ${tokens.length} tokens para Clientes`);
 
       notificationTitle = newStatus === 'pronto' ? "🌭 Seu pedido está pronto!" : "👨‍🍳 Pedido sendo preparado"
       notificationBody = newStatus === 'pronto' 
-        ? "Seu pedido no Hotdog Viviane ficou pronto. Vamos te avisar em breve!" 
-        : "Seu delicioso hotdog já entrou na cozinha!"
+        ? `Seu pedido #${safeShort} no Hotdog Viviane ficou pronto!` 
+        : `Seu pedido #${safeShort} já entrou na cozinha!`
     }
 
     if (tokens.length === 0) {
-      return new Response(JSON.stringify({ message: 'Nenhum token encontrado' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      return new Response(JSON.stringify({ ok: true, message: 'Nenhum token encontrado' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
     const oauthToken = await getGoogleAccessToken({
@@ -143,7 +142,6 @@ Deno.serve(async (req) => {
       privateKey: firebasePrivateKey,
     });
 
-    // Título e corpo já definidos nos blocos if/else acima
     const messageTitle = notificationTitle;
     const messageBody = notificationBody;
 
@@ -152,48 +150,52 @@ Deno.serve(async (req) => {
 
     await Promise.all(
       tokens.map(async (token) => {
-        const resp = await fetch(
-          `https://fcm.googleapis.com/v1/projects/${firebaseProjectId}/messages:send`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${oauthToken}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              message: {
-                token,
-                notification: {
-                  title: messageTitle,
-                  body: messageBody,
-                },
-                data: {
-                  orderId: body.orderId || "",
-                  shortId: body.shortId || "",
-                  click_action: "/comanda",
-                },
-                webpush: {
-                  fcm_options: {
-                    link: "/comanda",
-                  },
-                  notification: {
-                    icon: "https://newneo.com.br/img/logo_hotdog_viviane.png",
-                    badge: "https://newneo.com.br/img/logo_hotdog_viviane.png",
-                  },
-                },
+        try {
+          const resp = await fetch(
+            `https://fcm.googleapis.com/v1/projects/${firebaseProjectId}/messages:send`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${oauthToken}`,
+                "Content-Type": "application/json",
               },
-            }),
-          },
-        );
+              body: JSON.stringify({
+                message: {
+                  token,
+                  notification: {
+                    title: messageTitle,
+                    body: messageBody,
+                  },
+                  data: {
+                    orderId: String(finalOrderId),
+                    shortId: String(safeShort),
+                    click_action: "/comanda.html",
+                  },
+                  webpush: {
+                    fcm_options: {
+                      link: "/comanda.html",
+                    },
+                    notification: {
+                      icon: "https://newneo.com.br/img/logo_hotdog_viviane.png",
+                      badge: "https://newneo.com.br/img/logo_hotdog_viviane.png",
+                    },
+                  },
+                },
+              }),
+            },
+          );
 
-        if (resp.ok) {
-          sent += 1;
-          return;
-        }
-
-        const errText = await resp.text();
-        if (errText.includes("UNREGISTERED") || errText.includes("registration-token-not-registered")) {
-          invalidTokens.push(token);
+          if (resp.ok) {
+            sent += 1;
+          } else {
+            const errText = await resp.text();
+            console.warn(`Erro FCM para token ${token.substring(0, 10)}... : ${errText}`);
+            if (errText.includes("UNREGISTERED") || errText.includes("registration-token-not-registered")) {
+              invalidTokens.push(token);
+            }
+          }
+        } catch (e) {
+          console.error(`Falha ao disparar fetch FCM: ${e.message}`);
         }
       }),
     );
